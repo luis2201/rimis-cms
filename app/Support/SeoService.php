@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\MediaFile;
+use App\Models\News;
 use App\Models\Page;
 use App\Models\SiteSetting;
 use Illuminate\Support\Facades\Schema;
@@ -40,6 +41,39 @@ class SeoService
             'canonical_url' => $page->seo_canonical_url ?: $suggestions['canonical_url'],
             'image_url' => $imageUrl ? url($imageUrl) : null,
             'robots' => $page->seo_index && ($settings?->seo_index ?? true) ? 'index, follow' : 'noindex, nofollow',
+            'twitter_card' => $settings?->twitter_card ?: 'summary_large_image',
+        ];
+    }
+
+    public function suggestionsForNews(News $news): array
+    {
+        $settings = $this->settings();
+        $siteName = $settings?->site_name ?: 'RIMIS';
+        $plainText = Str::squish(strip_tags($news->content));
+        $taxonomy = trim(($news->category?->name ?? '').' '.$news->tags->pluck('name')->implode(' '));
+
+        return [
+            'title' => Str::limit(trim($news->title.' | '.$siteName), 60, ''),
+            'description' => Str::limit(trim($news->excerpt ?: $plainText ?: $settings?->site_description), 160, ''),
+            'keywords' => $this->keywords($news->title.' '.$taxonomy.' '.$plainText),
+            'canonical_url' => route('news.show', $news->slug),
+            'image_url' => $news->featuredImage?->publicUrl(),
+        ];
+    }
+
+    public function forNews(News $news): array
+    {
+        $settings = $this->settings();
+        $suggestions = $this->suggestionsForNews($news);
+        $imageUrl = $suggestions['image_url'] ?: $settings?->og_image;
+
+        return [
+            'title' => $news->seo_title ?: $suggestions['title'] ?: $settings?->meta_title,
+            'description' => $news->seo_description ?: $suggestions['description'] ?: $settings?->meta_description,
+            'keywords' => $news->seo_keywords ?: $suggestions['keywords'] ?: $settings?->meta_keywords,
+            'canonical_url' => $suggestions['canonical_url'],
+            'image_url' => $imageUrl ? url($imageUrl) : null,
+            'robots' => $news->seo_index && ($settings?->seo_index ?? true) ? 'index, follow' : 'noindex, nofollow',
             'twitter_card' => $settings?->twitter_card ?: 'summary_large_image',
         ];
     }

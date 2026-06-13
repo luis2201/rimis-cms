@@ -6,8 +6,8 @@ use App\Models\MediaFile;
 use App\Models\News;
 use App\Models\NewsCategory;
 use App\Models\NewsTag;
-use App\Models\SiteSetting;
 use App\Support\HtmlSanitizer;
+use App\Support\SeoService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -16,7 +16,7 @@ use Illuminate\View\View;
 
 class NewsController extends Controller
 {
-    public function __construct(private HtmlSanitizer $sanitizer)
+    public function __construct(private HtmlSanitizer $sanitizer, private SeoService $seo)
     {
     }
 
@@ -44,18 +44,7 @@ class NewsController extends Controller
     public function publicShow(string $slug): View
     {
         $news = News::published()->with(['author', 'category', 'tags', 'featuredImage'])->where('slug', $slug)->firstOrFail();
-        $settings = SiteSetting::find(1);
-        $siteName = $settings?->site_name ?: 'RIMIS';
-        $description = $news->seo_description ?: Str::limit($news->excerpt ?: strip_tags($news->content), 160, '');
-        $seo = [
-            'title' => $news->seo_title ?: Str::limit($news->title.' | '.$siteName, 60, ''),
-            'description' => $description,
-            'keywords' => $news->seo_keywords ?: $news->tags->pluck('name')->implode(', '),
-            'canonical_url' => route('news.show', $news->slug),
-            'image_url' => $news->featuredImage ? url($news->featuredImage->publicUrl()) : ($settings?->og_image ? url($settings->og_image) : null),
-            'robots' => $news->seo_index && ($settings?->seo_index ?? true) ? 'index, follow' : 'noindex, nofollow',
-            'twitter_card' => $settings?->twitter_card ?: 'summary_large_image',
-        ];
+        $seo = $this->seo->forNews($news);
         $related = News::published()->where('id', '!=', $news->id)->when($news->category_id, fn ($query) => $query->where('category_id', $news->category_id))->latest('published_at')->limit(3)->get();
 
         return view('news.show', compact('news', 'seo', 'related'));
@@ -94,9 +83,10 @@ class NewsController extends Controller
 
     public function edit(News $news): View
     {
-        $news->load('tags');
+        $news->load(['category', 'tags', 'featuredImage']);
+        $seoSuggestions = $this->seo->suggestionsForNews($news);
 
-        return view('admin.news.edit', array_merge($this->formData(), compact('news')));
+        return view('admin.news.edit', array_merge($this->formData(), compact('news', 'seoSuggestions')));
     }
 
     public function update(Request $request, News $news): RedirectResponse

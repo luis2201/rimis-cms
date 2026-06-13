@@ -115,6 +115,34 @@ class NewsAuthorizationTest extends TestCase
         $this->get('/')->assertOk()->assertSee($eventNews->title);
     }
 
+    public function test_news_edit_displays_seo_suggestions_and_public_view_uses_them(): void
+    {
+        $administrator = $this->userWithRole('ADMINISTRADOR');
+        $category = NewsCategory::create(['name' => 'Investigación', 'slug' => 'investigacion', 'is_active' => true]);
+        $tag = NewsTag::create(['name' => 'Innovación', 'slug' => 'innovacion']);
+        $news = $this->draftNews($administrator);
+        $news->update([
+            'category_id' => $category->id,
+            'excerpt' => 'Descubrimientos científicos para transformar la sociedad.',
+        ]);
+        $news->tags()->sync([$tag->id]);
+
+        $this->actingAs($administrator)
+            ->get(route('admin.news.edit', $news))
+            ->assertOk()
+            ->assertSee('Aplicar sugerencias')
+            ->assertSee('Noticia científica | RIMIS')
+            ->assertSee('Descubrimientos científicos para transformar la sociedad.')
+            ->assertSee('innovación');
+
+        $news->publish();
+        $this->get(route('news.show', $news->slug))
+            ->assertOk()
+            ->assertSee('<title>Noticia científica | RIMIS</title>', false)
+            ->assertSee('name="description" content="Descubrimientos científicos para transformar la sociedad."', false)
+            ->assertSee('rel="canonical" href="'.route('news.show', $news->slug).'"', false);
+    }
+
     private function draftNews(User $author): News
     {
         return News::create([
