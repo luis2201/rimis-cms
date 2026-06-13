@@ -18,6 +18,7 @@
             <x-input-label for="email" value="Correo electrónico" />
             <x-text-input id="email" class="mt-2 block w-full px-3 py-2.5" type="email" name="email" :value="old('email')" required autocomplete="username" placeholder="nombre@ejemplo.com" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
+            <p class="mt-2 text-xs text-slate-500">Enviaremos un enlace para confirmar que este correo está operativo.</p>
         </div>
 
         <div>

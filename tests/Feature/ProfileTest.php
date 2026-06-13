@@ -3,7 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Notifications\VerifyResearcherEmail;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class ProfileTest extends TestCase
@@ -59,6 +62,24 @@ class ProfileTest extends TestCase
             ->assertRedirect('/profile');
 
         $this->assertNotNull($user->refresh()->email_verified_at);
+    }
+
+    public function test_researcher_receives_new_verification_link_after_changing_email(): void
+    {
+        Notification::fake();
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $researcher = User::factory()->create();
+        $researcher->assignRole('INVESTIGADOR');
+
+        $this->actingAs($researcher)
+            ->patch(route('profile.update'), [
+                'name' => $researcher->name,
+                'email' => 'correo-corregido@example.com',
+            ])
+            ->assertRedirect(route('verification.notice'));
+
+        $this->assertFalse($researcher->fresh()->hasVerifiedEmail());
+        Notification::assertSentTo($researcher, VerifyResearcherEmail::class);
     }
 
     public function test_user_can_deactivate_their_account(): void

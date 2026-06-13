@@ -3,10 +3,13 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use App\Notifications\VerifyResearcherEmail;
 use App\Providers\RouteServiceProvider;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
@@ -61,5 +64,29 @@ class EmailVerificationTest extends TestCase
         $this->actingAs($user)->get($verificationUrl);
 
         $this->assertFalse($user->fresh()->hasVerifiedEmail());
+    }
+
+    public function test_unverified_researcher_is_redirected_from_private_area_until_email_is_confirmed(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $researcher = User::factory()->unverified()->create();
+        $researcher->assignRole('INVESTIGADOR');
+
+        $this->actingAs($researcher)
+            ->get(route('dashboard'))
+            ->assertRedirect(route('verification.notice'));
+    }
+
+    public function test_verification_link_can_be_resent_to_researcher(): void
+    {
+        Notification::fake();
+        $user = User::factory()->unverified()->create();
+
+        $this->actingAs($user)
+            ->post(route('verification.send'))
+            ->assertRedirect()
+            ->assertSessionHas('status', 'verification-link-sent');
+
+        Notification::assertSentTo($user, VerifyResearcherEmail::class);
     }
 }

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bulletin;
+use App\Models\CallForProposal;
+use App\Models\Event;
 use App\Models\MediaFile;
 use App\Models\News;
 use App\Models\Page;
@@ -50,6 +52,8 @@ class SeoController extends Controller
             'pages' => Page::published()->where('seo_index', true)->latest('updated_at')->get(),
             'news' => News::published()->where('seo_index', true)->latest('updated_at')->get(),
             'bulletins' => Bulletin::published()->latest('updated_at')->get(),
+            'events' => Event::published()->latest('updated_at')->get(),
+            'calls' => CallForProposal::published()->latest('updated_at')->get(),
         ])
             ->header('Content-Type', 'application/xml');
     }

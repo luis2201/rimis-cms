@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\BulletinController;
+use App\Http\Controllers\CallForProposalController;
+use App\Http\Controllers\EventController;
 use App\Http\Controllers\MediaFileController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\MenuItemController;
@@ -10,7 +12,11 @@ use App\Http\Controllers\PageBlockController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SeoController;
+use App\Http\Controllers\SiteSettingController;
 use App\Http\Controllers\UserController;
+use App\Models\Bulletin;
+use App\Models\CallForProposal;
+use App\Models\Event;
 use App\Models\News;
 use App\Support\SeoService;
 use Illuminate\Support\Facades\Route;
@@ -30,10 +36,19 @@ use Illuminate\Support\Facades\Schema;
 Route::get('/', function () {
     $seo = app(SeoService::class)->global();
     $recentNews = Schema::hasTable('news')
-        ? News::published()->with(['category', 'featuredImage'])->latest('published_at')->limit(3)->get()
+        ? News::published()->with(['category', 'featuredImage'])->latest('published_at')->limit(6)->get()
+        : collect();
+    $upcomingEvents = Schema::hasTable('events')
+        ? Event::published()->with('featuredImage')->where('ends_at', '>=', now())->orderBy('starts_at')->limit(3)->get()
+        : collect();
+    $openCalls = Schema::hasTable('calls')
+        ? CallForProposal::published()->with('featuredImage')->where('opens_at', '<=', now())->where('closes_at', '>=', now())->orderBy('closes_at')->limit(3)->get()
+        : collect();
+    $recentBulletins = Schema::hasTable('bulletins')
+        ? Bulletin::published()->with('coverImage')->latest('published_at')->limit(3)->get()
         : collect();
 
-    return view('welcome', compact('seo', 'recentNews'));
+    return view('welcome', compact('seo', 'recentNews', 'upcomingEvents', 'openCalls', 'recentBulletins'));
 });
 
 Route::get('/dashboard', function () {
@@ -46,7 +61,7 @@ Route::get('/dashboard', function () {
     }
 
     abort(403);
-})->middleware(['auth', 'researcher.profile.complete'])->name('dashboard');
+})->middleware(['auth', 'researcher.verified', 'researcher.profile.complete'])->name('dashboard');
 
 Route::get('/pagina/{slug}', [PageController::class, 'publicShow'])->name('pages.show');
 Route::get('/noticias', [NewsController::class, 'publicIndex'])->name('news.index');
@@ -56,18 +71,48 @@ Route::get('/noticias/{slug}', [NewsController::class, 'publicShow'])->name('new
 Route::get('/boletines', [BulletinController::class, 'publicIndex'])->name('bulletins.index');
 Route::get('/boletines/{slug}', [BulletinController::class, 'publicShow'])->name('bulletins.show');
 Route::get('/boletines/{bulletin}/pdf', [BulletinController::class, 'download'])->name('bulletins.download');
+Route::get('/eventos', [EventController::class, 'publicIndex'])->name('events.index');
+Route::get('/eventos/{slug}', [EventController::class, 'publicShow'])->name('events.show');
+Route::get('/convocatorias', [CallForProposalController::class, 'publicIndex'])->name('calls.index');
+Route::get('/convocatorias/{slug}', [CallForProposalController::class, 'publicShow'])->name('calls.show');
+Route::get('/convocatorias/{call:slug}/bases', [CallForProposalController::class, 'download'])->name('calls.download');
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('seo.sitemap');
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('seo.robots');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::put('/profile/researcher', [ProfileController::class, 'updateResearcher'])->name('profile.researcher.update');
-    Route::get('/profile/{user}/curriculum', [ProfileController::class, 'downloadCv'])->name('profile.cv.download');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'researcher.verified'])->group(function () {
+    Route::put('/profile/researcher', [ProfileController::class, 'updateResearcher'])->name('profile.researcher.update');
+    Route::get('/profile/{user}/curriculum', [ProfileController::class, 'downloadCv'])->name('profile.cv.download');
+});
+
+Route::middleware(['auth', 'researcher.verified'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('settings/mail', [SiteSettingController::class, 'edit'])->middleware('can:settings.view')->name('settings.mail.edit');
+    Route::put('settings/mail', [SiteSettingController::class, 'update'])->middleware('can:settings.edit')->name('settings.mail.update');
+    Route::post('settings/mail/test', [SiteSettingController::class, 'sendTest'])->middleware('can:settings.edit')->name('settings.mail.test');
+
+    Route::get('calls', [CallForProposalController::class, 'index'])->middleware('can:calls.view')->name('calls.index');
+    Route::get('calls/create', [CallForProposalController::class, 'create'])->middleware('can:calls.create')->name('calls.create');
+    Route::post('calls', [CallForProposalController::class, 'store'])->middleware('can:calls.create')->name('calls.store');
+    Route::get('calls/{call}/edit', [CallForProposalController::class, 'edit'])->middleware('can:calls.edit')->name('calls.edit');
+    Route::put('calls/{call}', [CallForProposalController::class, 'update'])->middleware('can:calls.edit')->name('calls.update');
+    Route::delete('calls/{call}', [CallForProposalController::class, 'destroy'])->middleware('can:calls.delete')->name('calls.destroy');
+    Route::patch('calls/{call}/publish', [CallForProposalController::class, 'publish'])->middleware('can:calls.publish')->name('calls.publish');
+    Route::patch('calls/{call}/unpublish', [CallForProposalController::class, 'unpublish'])->middleware('can:calls.publish')->name('calls.unpublish');
+
+    Route::get('events', [EventController::class, 'index'])->middleware('can:events.view')->name('events.index');
+    Route::get('events/create', [EventController::class, 'create'])->middleware('can:events.create')->name('events.create');
+    Route::post('events', [EventController::class, 'store'])->middleware('can:events.create')->name('events.store');
+    Route::get('events/{event}/edit', [EventController::class, 'edit'])->middleware('can:events.edit')->name('events.edit');
+    Route::put('events/{event}', [EventController::class, 'update'])->middleware('can:events.edit')->name('events.update');
+    Route::delete('events/{event}', [EventController::class, 'destroy'])->middleware('can:events.delete')->name('events.destroy');
+    Route::patch('events/{event}/publish', [EventController::class, 'publish'])->middleware('can:events.publish')->name('events.publish');
+    Route::patch('events/{event}/unpublish', [EventController::class, 'unpublish'])->middleware('can:events.publish')->name('events.unpublish');
+
     Route::get('bulletins', [BulletinController::class, 'index'])->middleware('can:bulletins.view')->name('bulletins.index');
     Route::get('bulletins/create', [BulletinController::class, 'create'])->middleware('can:bulletins.create')->name('bulletins.create');
     Route::post('bulletins', [BulletinController::class, 'store'])->middleware('can:bulletins.create')->name('bulletins.store');

@@ -2,84 +2,67 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\SiteSetting;
+use App\Mail\SmtpTestMail;
+use App\Models\MailSetting;
+use App\Support\MailSettingsManager;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rule;
+use Illuminate\View\View;
+use Throwable;
 
 class SiteSettingController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
+    public function edit(): View
     {
-        //
+        return view('admin.settings.mail', ['settings' => MailSetting::first()]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
+    public function update(Request $request, MailSettingsManager $manager): RedirectResponse
     {
-        //
+        $settings = MailSetting::first();
+        $request->merge(['enabled' => $request->boolean('enabled')]);
+        $validated = $request->validate([
+            'enabled' => ['required', 'boolean'],
+            'host' => ['required', 'string', 'max:255'],
+            'port' => ['required', 'integer', 'between:1,65535'],
+            'encryption' => ['nullable', Rule::in(['ssl', 'tls'])],
+            'username' => ['required', 'string', 'max:255'],
+            'password' => [$settings ? 'nullable' : 'required', 'string', 'max:1000'],
+            'from_address' => ['required', 'email', 'max:255'],
+            'from_name' => ['required', 'string', 'max:255'],
+        ]);
+
+        if ($settings && blank($validated['password'] ?? null)) {
+            unset($validated['password']);
+        }
+
+        $settings = MailSetting::updateOrCreate(['id' => $settings?->id ?? 1], $validated);
+        $manager->apply($settings);
+
+        return back()->with('success', 'Configuración de correo actualizada correctamente.');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
+    public function sendTest(Request $request, MailSettingsManager $manager): RedirectResponse
     {
-        //
-    }
+        $validated = $request->validate(['test_email' => ['required', 'email', 'max:255']]);
+        $settings = MailSetting::first();
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\SiteSetting  $siteSetting
-     * @return \Illuminate\Http\Response
-     */
-    public function show(SiteSetting $siteSetting)
-    {
-        //
-    }
+        if (! $settings?->enabled) {
+            return back()->with('error', 'Activa y guarda la configuración SMTP antes de enviar una prueba.');
+        }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\SiteSetting  $siteSetting
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(SiteSetting $siteSetting)
-    {
-        //
-    }
+        try {
+            $manager->apply($settings);
+            Mail::to($validated['test_email'])->send(new SmtpTestMail());
+        } catch (Throwable $exception) {
+            Log::error('SMTP test failed.', ['exception' => $exception]);
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\SiteSetting  $siteSetting
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, SiteSetting $siteSetting)
-    {
-        //
-    }
+            return back()->with('error', 'No se pudo enviar el correo de prueba. Revisa el servidor, puerto, cifrado y credenciales.');
+        }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\SiteSetting  $siteSetting
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(SiteSetting $siteSetting)
-    {
-        //
+        return back()->with('success', 'Correo de prueba enviado a '.$validated['test_email'].'.');
     }
 }

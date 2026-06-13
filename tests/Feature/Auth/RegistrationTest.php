@@ -3,9 +3,10 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
-use App\Providers\RouteServiceProvider;
+use App\Notifications\VerifyResearcherEmail;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
@@ -21,6 +22,7 @@ class RegistrationTest extends TestCase
 
     public function test_new_users_can_register(): void
     {
+        Notification::fake();
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $response = $this->post('/register', [
@@ -31,7 +33,10 @@ class RegistrationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(RouteServiceProvider::HOME);
-        $this->assertTrue(User::where('email', 'test@example.com')->first()->hasRole('INVESTIGADOR'));
+        $response->assertRedirect(route('verification.notice'));
+        $user = User::where('email', 'test@example.com')->firstOrFail();
+        $this->assertTrue($user->hasRole('INVESTIGADOR'));
+        $this->assertFalse($user->hasVerifiedEmail());
+        Notification::assertSentTo($user, VerifyResearcherEmail::class);
     }
 }

@@ -22,4 +22,16 @@
         <lastmod>{{ $item->updated_at->toAtomString() }}</lastmod>
     </url>
 @endforeach
+@foreach($events as $item)
+    <url>
+        <loc>{{ route('events.show', $item->slug) }}</loc>
+        <lastmod>{{ $item->updated_at->toAtomString() }}</lastmod>
+    </url>
+@endforeach
+@foreach($calls as $item)
+    <url>
+        <loc>{{ route('calls.show', $item->slug) }}</loc>
+        <lastmod>{{ $item->updated_at->toAtomString() }}</lastmod>
+    </url>
+@endforeach
 </urlset>

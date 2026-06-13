@@ -77,6 +77,24 @@
                     </li>
                 @endcan
 
+                @can('events.view')
+                    <li class="nav-item">
+                        <a href="{{ route('admin.events.index') }}" class="nav-link {{ request()->routeIs('admin.events.*') ? 'active' : '' }}">
+                            <i class="nav-icon far fa-calendar-alt"></i>
+                            <p>Eventos</p>
+                        </a>
+                    </li>
+                @endcan
+
+                @can('calls.view')
+                    <li class="nav-item">
+                        <a href="{{ route('admin.calls.index') }}" class="nav-link {{ request()->routeIs('admin.calls.*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-bullhorn"></i>
+                            <p>Convocatorias</p>
+                        </a>
+                    </li>
+                @endcan
+
                 @can('menus.view')
                     <li class="nav-item">
                         <a href="{{ route('admin.menus.index') }}" class="nav-link {{ request()->routeIs('admin.menus.*') ? 'active' : '' }}">
@@ -113,6 +131,15 @@
                                 </a>
                             </li>
                         </ul>
+                    </li>
+                @endcan
+
+                @can('settings.view')
+                    <li class="nav-item">
+                        <a href="{{ route('admin.settings.mail.edit') }}" class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-envelope-open-text"></i>
+                            <p>Configuración de correo</p>
+                        </a>
                     </li>
                 @endcan
 

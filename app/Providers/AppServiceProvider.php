@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Menu;
+use App\Support\MailSettingsManager;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
@@ -27,6 +28,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        app(MailSettingsManager::class)->apply();
+
         Paginator::useBootstrap();
 
         View::composer([
@@ -37,6 +40,10 @@ class AppServiceProvider extends ServiceProvider
             'news.show',
             'bulletins.index',
             'bulletins.show',
+            'events.index',
+            'events.show',
+            'calls.index',
+            'calls.show',
         ], function ($view) {
             $publicMenus = Schema::hasTable('menus')
                 ? Menu::where('is_active', true)->with('rootItems')->get()->keyBy('location')
