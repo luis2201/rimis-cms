@@ -1,0 +1,10 @@
+<x-app-layout>
+    <x-slot name="header"><h1 class="m-0"><i class="fas fa-edit text-primary mr-2"></i>Editar menú</h1></x-slot>
+    <div class="row"><div class="col-lg-8">
+        <form method="POST" action="{{ route('admin.menus.update', $menu) }}" class="card card-primary card-outline shadow-sm">
+            @csrf @method('PUT')
+            <div class="card-body">@include('admin.menus._form')</div>
+            <div class="card-footer"><button class="btn btn-primary mr-2"><i class="fas fa-save mr-1"></i> Guardar cambios</button><a href="{{ route('admin.menus.index') }}" class="btn btn-secondary">Cancelar</a></div>
+        </form>
+    </div></div>
+</x-app-layout>

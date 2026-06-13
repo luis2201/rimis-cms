@@ -1,0 +1,151 @@
+@import './brand.css';
+@import '@fortawesome/fontawesome-free/css/all.min.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+[x-cloak] {
+    display: none !important;
+}
+
+.page-public-content h2,
+.page-public-content h3,
+.page-public-content h4 {
+    margin-top: 1.75rem;
+    margin-bottom: .75rem;
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.page-public-content h2 {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+}
+
+.page-public-content h3 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+}
+
+.page-public-content h4 {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+}
+
+.page-public-content blockquote {
+    border-left: 4px solid var(--rimis-primary);
+    padding-left: 1rem;
+    color: #475569;
+}
+
+.page-public-content table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.page-public-content th,
+.page-public-content td {
+    border: 1px solid #cbd5e1;
+    padding: .65rem;
+}
+
+.page-public-content p,
+.page-public-content ul,
+.page-public-content ol,
+.page-public-content blockquote,
+.page-public-content table,
+.page-public-content figure {
+    margin-bottom: 1.25rem;
+}
+
+.page-public-content ul,
+.page-public-content ol {
+    padding-left: 1.5rem;
+}
+
+.page-public-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: .75rem;
+}
+
+.page-public-content a {
+    color: var(--rimis-primary-dark);
+    text-decoration: underline;
+}
+
+.page-public-content > :last-child {
+    margin-bottom: 0;
+}
+
+.page-block-section {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+.page-block-section:nth-of-type(even) {
+    background: #f1f5f9;
+}
+
+.page-block-title {
+    margin-bottom: 1.25rem;
+    color: #0f172a;
+    font-size: 2rem;
+    line-height: 2.4rem;
+    font-weight: 700;
+}
+
+@media (max-width: 640px) {
+    .page-block-section {
+        padding-top: 1.5rem;
+        padding-bottom: 1.5rem;
+    }
+
+    .page-block-title {
+        margin-bottom: 1rem;
+        font-size: 1.65rem;
+        line-height: 2rem;
+    }
+}
+
+.page-block-hero {
+    background-color: var(--rimis-charcoal);
+    background-position: center;
+    background-size: cover;
+}
+
+.page-block-gallery-image {
+    width: 100%;
+    height: 260px;
+    border-radius: .75rem;
+    object-fit: cover;
+    box-shadow: 0 .25rem 1rem rgba(15, 23, 42, .12);
+}
+
+.page-block-button,
+.page-block-button-outline {
+    display: inline-flex;
+    align-items: center;
+    border: 2px solid var(--rimis-primary);
+    border-radius: .5rem;
+    padding: .75rem 1.25rem;
+    font-weight: 700;
+    transition: .2s ease;
+}
+
+.page-block-button {
+    background: var(--rimis-primary);
+    color: #fff;
+}
+
+.page-block-button-outline {
+    color: var(--rimis-primary-dark);
+}
+
+.page-block-button:hover,
+.page-block-button-outline:hover {
+    background: var(--rimis-primary-dark);
+    border-color: var(--rimis-primary-dark);
+    color: #fff;
+}
