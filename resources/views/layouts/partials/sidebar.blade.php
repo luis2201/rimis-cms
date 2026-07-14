@@ -16,7 +16,7 @@
 
         <nav class="mt-2">
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-                @canany(['dashboard.view', 'dashboard.researcher'])
+                @canany(['dashboard.view', 'dashboard.researcher', 'dashboard.basic'])
                     <li class="nav-header">PRINCIPAL</li>
                     <li class="nav-item">
                         <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
@@ -150,7 +150,7 @@
                             <i class="nav-icon fas fa-user-cog"></i>
                             <p>
                                 Mi perfil
-                                @if (Auth::user()->hasRole('INVESTIGADOR') && ! Auth::user()->hasCompleteResearcherProfile())
+                                @if (Auth::user()->hasAnyRole(['USUARIO', 'INVESTIGADOR']) && ! Auth::user()->hasCompleteResearcherProfile())
                                     <span class="right badge badge-warning">Pendiente</span>
                                 @endif
                             </p>

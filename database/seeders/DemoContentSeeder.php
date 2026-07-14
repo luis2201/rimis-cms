@@ -12,9 +12,11 @@ use App\Models\News;
 use App\Models\NewsCategory;
 use App\Models\NewsTag;
 use App\Models\Page;
+use App\Models\ResearcherApplication;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -25,6 +27,7 @@ class DemoContentSeeder extends Seeder
         $this->prepareStorageDirectories();
 
         $author = User::role('ADMINISTRADOR')->first() ?? User::firstOrFail();
+        $this->seedPhaseOneUsers($author);
         $images = MediaFile::where('file_type', 'image')->where('status', true)->pluck('id')->values();
 
         $this->seedPagesAndMenus($author);
@@ -192,6 +195,40 @@ class DemoContentSeeder extends Seeder
                     'published_at' => now()->subMonths($index)->subDays(2),
                 ]
             );
+        }
+    }
+
+    private function seedPhaseOneUsers(User $administrator): void
+    {
+        $administrator->assignRole('ADMINISTRADOR');
+
+        $accounts = [
+            ['name' => 'Usuario Demo', 'email' => 'usuario@rimis.test', 'role' => 'USUARIO'],
+            ['name' => 'Investigador Demo', 'email' => 'investigador@rimis.test', 'role' => 'INVESTIGADOR'],
+            ['name' => 'Webmaster Demo', 'email' => 'webmaster@rimis.test', 'role' => 'WEBMASTER'],
+        ];
+
+        foreach ($accounts as $account) {
+            $user = User::updateOrCreate(
+                ['email' => $account['email']],
+                ['name' => $account['name'], 'password' => Hash::make('password'), 'is_active' => true]
+            );
+            $user->forceFill(['email_verified_at' => $user->email_verified_at ?: now()])->save();
+            $user->syncRoles([$account['role']]);
+
+            if ($account['role'] === 'INVESTIGADOR') {
+                $application = $user->researcherApplication()->firstOrCreate([], [
+                    'status' => ResearcherApplication::STATUS_APPROVED,
+                    'submitted_at' => now(),
+                    'reviewed_at' => now(),
+                    'reviewed_by' => $administrator->id,
+                    'review_notes' => 'Postulación aprobada para datos de demostración.',
+                ]);
+                $application->history()->firstOrCreate(
+                    ['previous_status' => null, 'new_status' => ResearcherApplication::STATUS_APPROVED],
+                    ['comments' => 'Postulación aprobada para datos de demostración.', 'changed_by' => $administrator->id]
+                );
+            }
         }
     }
 

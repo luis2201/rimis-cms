@@ -6,6 +6,7 @@ use App\Notifications\VerifyResearcherEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -54,10 +55,24 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(ResearcherProfile::class);
     }
 
+    public function researcherApplication(): HasOne
+    {
+        return $this->hasOne(ResearcherApplication::class);
+    }
+
+    public function reviewedResearcherApplications(): HasMany
+    {
+        return $this->hasMany(ResearcherApplication::class, 'reviewed_by');
+    }
+
+    public function researcherApplicationHistoryChanges(): HasMany
+    {
+        return $this->hasMany(ResearcherApplicationHistory::class, 'changed_by');
+    }
+
     public function hasCompleteResearcherProfile(): bool
     {
-        return ! $this->hasRole('INVESTIGADOR')
-            || $this->researcherProfile()->whereNotNull('completed_at')->exists();
+        return $this->researcherProfile()->whereNotNull('completed_at')->exists();
     }
 
     public function deactivate(): void

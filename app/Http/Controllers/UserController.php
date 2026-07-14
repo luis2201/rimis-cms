@@ -14,7 +14,7 @@ use Illuminate\View\View;
 
 class UserController extends Controller
 {
-    private const ASSIGNABLE_ROLES = ['WEBMASTER', 'INVESTIGADOR'];
+    private const ASSIGNABLE_ROLES = ['WEBMASTER', 'INVESTIGADOR', 'USUARIO'];
 
     public function index(Request $request): View
     {

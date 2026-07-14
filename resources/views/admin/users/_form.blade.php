@@ -25,7 +25,7 @@
             @endforeach
         </select>
         @error('role')<span class="invalid-feedback">{{ $message }}</span>@enderror
-        <small class="form-text text-muted">Los registros públicos reciben automáticamente el rol INVESTIGADOR.</small>
+        <small class="form-text text-muted">Los registros públicos reciben automáticamente el rol USUARIO.</small>
     @endif
 </div>
 

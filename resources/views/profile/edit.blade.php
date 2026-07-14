@@ -5,7 +5,7 @@
 
     <div class="row">
         <div class="col-lg-8">
-            @if ($user->hasRole('INVESTIGADOR'))
+            @if ($user->hasAnyRole(['USUARIO', 'INVESTIGADOR']))
                 <div class="card card-primary card-outline">
                     <div class="card-header">
                         <h3 class="card-title"><i class="fas fa-user-graduate mr-2"></i>Información profesional</h3>
@@ -61,7 +61,7 @@
                     <div class="text-center text-muted pt-3">
                         <i class="fas fa-envelope mr-1"></i>{{ $user->email }}
                     </div>
-                    @if ($user->hasRole('INVESTIGADOR'))
+                    @if ($user->hasAnyRole(['USUARIO', 'INVESTIGADOR']))
                         <div class="text-center mt-3">
                             <span class="badge badge-{{ $user->hasCompleteResearcherProfile() ? 'success' : 'warning' }}">
                                 <i class="fas fa-{{ $user->hasCompleteResearcherProfile() ? 'check-circle' : 'exclamation-circle' }} mr-1"></i>

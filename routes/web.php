@@ -60,6 +60,10 @@ Route::get('/dashboard', function () {
         return view('dashboard.researcher');
     }
 
+    if (auth()->user()->can('dashboard.basic')) {
+        return view('dashboard.user');
+    }
+
     abort(403);
 })->middleware(['auth', 'researcher.verified', 'researcher.profile.complete'])->name('dashboard');
 

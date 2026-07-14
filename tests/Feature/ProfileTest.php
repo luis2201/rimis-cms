@@ -26,7 +26,10 @@ class ProfileTest extends TestCase
 
     public function test_profile_information_can_be_updated(): void
     {
+        Notification::fake();
+        $this->seed(RolesAndPermissionsSeeder::class);
         $user = User::factory()->create();
+        $user->assignRole('USUARIO');
 
         $response = $this
             ->actingAs($user)
@@ -37,13 +40,14 @@ class ProfileTest extends TestCase
 
         $response
             ->assertSessionHasNoErrors()
-            ->assertRedirect('/profile');
+            ->assertRedirect(route('verification.notice'));
 
         $user->refresh();
 
         $this->assertSame('Test User', $user->name);
         $this->assertSame('test@example.com', $user->email);
         $this->assertNull($user->email_verified_at);
+        Notification::assertSentTo($user, VerifyResearcherEmail::class);
     }
 
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void

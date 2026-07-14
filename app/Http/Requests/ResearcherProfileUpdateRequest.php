@@ -10,7 +10,7 @@ class ResearcherProfileUpdateRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->hasRole('INVESTIGADOR');
+        return $this->user()->hasAnyRole(['USUARIO', 'INVESTIGADOR']);
     }
 
     public function rules(): array

@@ -9,7 +9,7 @@ class EnsureResearcherEmailIsVerified
 {
     public function handle(Request $request, Closure $next)
     {
-        if ($request->user()?->hasRole('INVESTIGADOR') && ! $request->user()->hasVerifiedEmail()) {
+        if ($request->user()?->hasAnyRole(['USUARIO', 'INVESTIGADOR']) && ! $request->user()->hasVerifiedEmail()) {
             return redirect()
                 ->route('verification.notice')
                 ->with('warning', 'Confirma tu correo electrónico para acceder al área privada.');
