@@ -108,6 +108,11 @@ class RolesAndPermissionsSeeder extends Seeder
             'applications.edit-own',
             'applications.submit',
             'applications.withdraw',
+            'applications.view',
+            'applications.review',
+            'applications.observe',
+            'applications.approve',
+            'applications.reject',
         ];
 
         foreach ($permissions as $permission) {
@@ -208,6 +213,12 @@ class RolesAndPermissionsSeeder extends Seeder
 
             'profile.view',
             'profile.edit',
+
+            'applications.view',
+            'applications.review',
+            'applications.observe',
+            'applications.approve',
+            'applications.reject',
         ]);
 
         $researcher->syncPermissions([
@@ -225,6 +236,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'events.view',
             'calls.view',
             'notifications.view',
+            'applications.view-own',
         ]);
 
         $user->syncPermissions([

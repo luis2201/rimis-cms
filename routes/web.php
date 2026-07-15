@@ -14,6 +14,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SeoController;
 use App\Http\Controllers\SiteSettingController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ResearcherApplicationController;
+use App\Http\Controllers\Admin\ResearcherApplicationController as AdminResearcherApplicationController;
 use App\Models\Bulletin;
 use App\Models\CallForProposal;
 use App\Models\Event;
@@ -94,7 +96,24 @@ Route::middleware(['auth', 'researcher.verified'])->group(function () {
     Route::get('/profile/{user}/curriculum', [ProfileController::class, 'downloadCv'])->name('profile.cv.download');
 });
 
+Route::middleware(['auth', 'verified'])->prefix('postulacion')->name('applications.')->group(function () {
+    Route::get('/', [ResearcherApplicationController::class, 'show'])->middleware('can:applications.view-own')->name('show');
+    Route::get('/crear', [ResearcherApplicationController::class, 'create'])->middleware('can:applications.create')->name('create');
+    Route::post('/', [ResearcherApplicationController::class, 'store'])->middleware('can:applications.create')->name('store');
+    Route::get('/editar', [ResearcherApplicationController::class, 'edit'])->middleware('can:applications.edit-own')->name('edit');
+    Route::put('/', [ResearcherApplicationController::class, 'update'])->middleware('can:applications.edit-own')->name('update');
+    Route::post('/enviar', [ResearcherApplicationController::class, 'submit'])->middleware('can:applications.submit')->name('submit');
+    Route::post('/retirar', [ResearcherApplicationController::class, 'withdraw'])->middleware('can:applications.withdraw')->name('withdraw');
+});
+
 Route::middleware(['auth', 'researcher.verified'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('researcher-applications', [AdminResearcherApplicationController::class, 'index'])->middleware('can:applications.view')->name('researcher-applications.index');
+    Route::get('researcher-applications/{application}', [AdminResearcherApplicationController::class, 'show'])->middleware('can:applications.view')->name('researcher-applications.show');
+    Route::get('researcher-applications/{application}/curriculum', [AdminResearcherApplicationController::class, 'downloadCv'])->middleware('can:applications.view')->name('researcher-applications.cv');
+    Route::patch('researcher-applications/{application}/start-review', [AdminResearcherApplicationController::class, 'startReview'])->middleware('can:applications.review')->name('researcher-applications.start-review');
+    Route::patch('researcher-applications/{application}/observe', [AdminResearcherApplicationController::class, 'observe'])->middleware('can:applications.observe')->name('researcher-applications.observe');
+    Route::patch('researcher-applications/{application}/approve', [AdminResearcherApplicationController::class, 'approve'])->middleware('can:applications.approve')->name('researcher-applications.approve');
+    Route::patch('researcher-applications/{application}/reject', [AdminResearcherApplicationController::class, 'reject'])->middleware('can:applications.reject')->name('researcher-applications.reject');
     Route::get('settings/mail', [SiteSettingController::class, 'edit'])->middleware('can:settings.view')->name('settings.mail.edit');
     Route::put('settings/mail', [SiteSettingController::class, 'update'])->middleware('can:settings.edit')->name('settings.mail.update');
     Route::post('settings/mail/test', [SiteSettingController::class, 'sendTest'])->middleware('can:settings.edit')->name('settings.mail.test');

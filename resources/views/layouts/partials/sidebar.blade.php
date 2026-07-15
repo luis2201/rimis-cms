@@ -134,6 +134,11 @@
                     </li>
                 @endcan
 
+                @can('applications.view')
+                    <li class="nav-header">MEMBRESÍAS</li>
+                    <li class="nav-item"><a href="{{ route('admin.researcher-applications.index') }}" class="nav-link {{ request()->routeIs('admin.researcher-applications.*') ? 'active' : '' }}"><i class="nav-icon fas fa-user-check"></i><p>Postulaciones a RIMIS <span class="right badge badge-info">{{ \App\Models\ResearcherApplication::whereIn('status',['submitted','under_review'])->count() }}</span></p></a></li>
+                @endcan
+
                 @can('settings.view')
                     <li class="nav-item">
                         <a href="{{ route('admin.settings.mail.edit') }}" class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
@@ -156,6 +161,9 @@
                             </p>
                         </a>
                     </li>
+                @endcan
+                @can('applications.view-own')
+                    <li class="nav-item"><a href="{{ route('applications.show') }}" class="nav-link {{ request()->routeIs('applications.*') ? 'active' : '' }}"><i class="nav-icon fas fa-file-signature"></i><p>{{ Auth::user()->hasRole('INVESTIGADOR') ? 'Mi membresía RIMIS' : 'Mi postulación' }}</p></a></li>
                 @endcan
             </ul>
         </nav>

@@ -24,8 +24,13 @@
             <div class="card card-secondary card-outline h-100">
                 <div class="card-header"><h3 class="card-title">Postulación a la red</h3></div>
                 <div class="card-body">
-                    <p>Próximamente podrás enviar y consultar desde aquí tu postulación para pertenecer a RIMIS.</p>
-                    <button class="btn btn-secondary" disabled>Postulación próximamente</button>
+                    @if(Auth::user()->researcherApplication)
+                        <p>Estado actual: <strong>{{ \App\Models\ResearcherApplication::STATUS_LABELS[Auth::user()->researcherApplication->status] }}</strong></p>
+                        <a href="{{ route('applications.show') }}" class="btn btn-primary">Ver mi postulación</a>
+                    @else
+                        <p>Todavía no has presentado tu postulación para formar parte de la Red de Investigadores RIMIS.</p>
+                        <a href="{{ route('applications.create') }}" class="btn btn-primary">Iniciar postulación</a>
+                    @endif
                 </div>
             </div>
         </div>
