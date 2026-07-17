@@ -6,12 +6,17 @@ use App\Models\Bulletin;
 use App\Models\CallForProposal;
 use App\Models\Event;
 use App\Models\MediaFile;
+use App\Models\Menu;
+use App\Models\MenuItem;
 use App\Models\News;
 use App\Models\NewsCategory;
 use App\Models\NewsTag;
+use App\Models\Page;
+use App\Models\ResearcherApplication;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -22,7 +27,10 @@ class DemoContentSeeder extends Seeder
         $this->prepareStorageDirectories();
 
         $author = User::role('ADMINISTRADOR')->first() ?? User::firstOrFail();
+        $this->seedPhaseOneUsers($author);
         $images = MediaFile::where('file_type', 'image')->where('status', true)->pluck('id')->values();
+
+        $this->seedPagesAndMenus($author);
 
         $categories = collect([
             ['name' => 'Investigación', 'description' => 'Avances y proyectos científicos de la red.'],
@@ -187,6 +195,112 @@ class DemoContentSeeder extends Seeder
                     'published_at' => now()->subMonths($index)->subDays(2),
                 ]
             );
+        }
+    }
+
+    private function seedPhaseOneUsers(User $administrator): void
+    {
+        $administrator->assignRole('ADMINISTRADOR');
+
+        $accounts = [
+            ['name' => 'Usuario Demo', 'email' => 'usuario@rimis.test', 'role' => 'USUARIO'],
+            ['name' => 'Investigador Demo', 'email' => 'investigador@rimis.test', 'role' => 'INVESTIGADOR'],
+            ['name' => 'Webmaster Demo', 'email' => 'webmaster@rimis.test', 'role' => 'WEBMASTER'],
+        ];
+
+        foreach ($accounts as $account) {
+            $user = User::updateOrCreate(
+                ['email' => $account['email']],
+                ['name' => $account['name'], 'password' => Hash::make('password'), 'is_active' => true]
+            );
+            $user->forceFill(['email_verified_at' => $user->email_verified_at ?: now()])->save();
+            $user->syncRoles([$account['role']]);
+
+            if ($account['role'] === 'INVESTIGADOR') {
+                $application = $user->researcherApplication()->firstOrCreate([], [
+                    'status' => ResearcherApplication::STATUS_APPROVED,
+                    'submitted_at' => now(),
+                    'reviewed_at' => now(),
+                    'reviewed_by' => $administrator->id,
+                    'review_notes' => 'Postulación aprobada para datos de demostración.',
+                ]);
+                $application->history()->firstOrCreate(
+                    ['previous_status' => null, 'new_status' => ResearcherApplication::STATUS_APPROVED],
+                    ['comments' => 'Postulación aprobada para datos de demostración.', 'changed_by' => $administrator->id]
+                );
+            }
+        }
+    }
+
+    private function seedPagesAndMenus(User $author): void
+    {
+        $pages = collect([
+            [
+                'title' => 'Nosotros',
+                'slug' => 'nosotros',
+                'excerpt' => 'Conoce la misión, visión y propósito de la Red de Investigación Multidisciplinaria.',
+                'blocks' => [
+                    ['type' => 'hero', 'name' => 'Presentación', 'data' => ['title' => 'Conocimiento que conecta', 'subtitle' => 'Articulamos investigadores, instituciones y comunidades para responder a desafíos complejos.']],
+                    ['type' => 'text', 'name' => 'Quiénes somos', 'data' => ['title' => 'Quiénes somos', 'content' => '<p>RIMIS es una red orientada a fortalecer la investigación multidisciplinaria, la colaboración académica y la transferencia de conocimiento.</p><p>Promovemos proyectos con impacto científico, social y territorial.</p>']],
+                    ['type' => 'cards', 'name' => 'Principios', 'data' => ['title' => 'Nuestros principios', 'items' => [['Colaboración', 'Conectamos capacidades y perspectivas de distintas disciplinas.', '#'], ['Rigor', 'Impulsamos investigación responsable, abierta y de calidad.', '#'], ['Impacto', 'Orientamos el conocimiento hacia necesidades reales.', '#']]]],
+                ],
+            ],
+            [
+                'title' => 'Líneas de investigación',
+                'slug' => 'lineas-de-investigacion',
+                'excerpt' => 'Áreas prioritarias que orientan los proyectos y colaboraciones de RIMIS.',
+                'blocks' => [
+                    ['type' => 'hero', 'name' => 'Encabezado', 'data' => ['title' => 'Líneas de investigación', 'subtitle' => 'Ámbitos donde convergen ciencia, tecnología, sociedad y territorio.']],
+                    ['type' => 'cards', 'name' => 'Áreas', 'data' => ['title' => 'Áreas prioritarias', 'items' => [['Salud y bienestar', 'Investigación para mejorar la prevención, atención y calidad de vida.', '#'], ['Tecnología e innovación', 'Soluciones digitales y procesos de transformación responsable.', '#'], ['Sostenibilidad', 'Respuestas a desafíos ambientales, productivos y territoriales.', '#'], ['Educación y sociedad', 'Conocimiento para fortalecer aprendizaje, inclusión y participación.', '#'], ['Ciencia de datos', 'Métodos para comprender información compleja y apoyar decisiones.', '#'], ['Desarrollo territorial', 'Proyectos construidos junto con comunidades e instituciones.', '#']]]],
+                    ['type' => 'dynamic_list', 'name' => 'Noticias recientes', 'data' => ['title' => 'Investigación en acción', 'source' => 'recent_news', 'limit' => 3]],
+                ],
+            ],
+            [
+                'title' => 'Servicios',
+                'slug' => 'servicios',
+                'excerpt' => 'Servicios de acompañamiento, formación y vinculación para la comunidad investigadora.',
+                'blocks' => [
+                    ['type' => 'hero', 'name' => 'Encabezado', 'data' => ['title' => 'Servicios para investigadores', 'subtitle' => 'Recursos y acompañamiento para convertir ideas en proyectos de impacto.']],
+                    ['type' => 'cards', 'name' => 'Servicios', 'data' => ['title' => '¿Cómo podemos ayudarte?', 'items' => [['Asesoría metodológica', 'Orientación para formular proyectos y fortalecer diseños de investigación.', '/convocatorias'], ['Formación', 'Talleres sobre escritura científica, datos, innovación y ciencia abierta.', '/eventos'], ['Difusión científica', 'Espacios para comunicar resultados, experiencias y oportunidades.', '/noticias']]]],
+                    ['type' => 'buttons', 'name' => 'Accesos', 'data' => ['title' => 'Explora las oportunidades disponibles', 'items' => [['Ver convocatorias', '/convocatorias', 'primary'], ['Próximos eventos', '/eventos', 'outline']]]],
+                ],
+            ],
+            [
+                'title' => 'Contacto',
+                'slug' => 'contacto',
+                'excerpt' => 'Canales de contacto de la Red de Investigación Multidisciplinaria RIMIS.',
+                'blocks' => [
+                    ['type' => 'hero', 'name' => 'Encabezado', 'data' => ['title' => 'Conversemos', 'subtitle' => 'Estamos abiertos a nuevas ideas, alianzas y proyectos de investigación.']],
+                    ['type' => 'text', 'name' => 'Información', 'data' => ['title' => 'Contacto', 'content' => '<p><strong>Correo:</strong> info@itsup.edu.ec</p><p><strong>Horario:</strong> lunes a viernes, de 08:00 a 17:00.</p><p>Escríbenos para conocer cómo participar en la red o proponer una colaboración.</p>']],
+                    ['type' => 'faq', 'name' => 'Preguntas frecuentes', 'data' => ['title' => 'Preguntas frecuentes', 'items' => [['¿Quién puede participar?', 'Investigadores, docentes, estudiantes, instituciones y organizaciones interesadas en trabajo multidisciplinario.'], ['¿Cómo propongo una colaboración?', 'Puedes escribir al correo institucional indicando el área, objetivo y posibles participantes.'], ['¿Dónde se publican las oportunidades?', 'Las convocatorias, eventos y noticias se actualizan permanentemente en este portal.']]]],
+                ],
+            ],
+        ])->map(function (array $data) use ($author) {
+            $blocks = $data['blocks'];
+            unset($data['blocks']);
+            $page = Page::updateOrCreate(
+                ['slug' => $data['slug']],
+                $data + ['user_id' => $author->id, 'content' => '', 'show_title' => false, 'status' => Page::STATUS_PUBLISHED, 'published_at' => now(), 'seo_index' => true]
+            );
+
+            foreach ($blocks as $index => $block) {
+                $page->blocks()->updateOrCreate(
+                    ['name' => $block['name']],
+                    $block + ['sort_order' => $index + 1, 'is_active' => true]
+                );
+            }
+
+            return $page;
+        });
+
+        foreach (['principal', 'footer'] as $location) {
+            $menu = Menu::where('location', $location)->firstOrFail();
+            foreach ($pages as $index => $page) {
+                MenuItem::updateOrCreate(
+                    ['menu_id' => $menu->id, 'url' => route('pages.show', $page->slug, false)],
+                    ['parent_id' => null, 'label' => $page->title, 'target' => '_self', 'sort_order' => $index + 1, 'is_active' => true]
+                );
+            }
         }
     }
 

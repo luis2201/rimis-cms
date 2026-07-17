@@ -15,6 +15,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
         $permissions = [
             'dashboard.view',
+            'dashboard.basic',
 
             'users.view',
             'users.create',
@@ -101,6 +102,17 @@ class RolesAndPermissionsSeeder extends Seeder
             'research.edit',
 
             'dashboard.researcher',
+
+            'applications.create',
+            'applications.view-own',
+            'applications.edit-own',
+            'applications.submit',
+            'applications.withdraw',
+            'applications.view',
+            'applications.review',
+            'applications.observe',
+            'applications.approve',
+            'applications.reject',
         ];
 
         foreach ($permissions as $permission) {
@@ -122,6 +134,11 @@ class RolesAndPermissionsSeeder extends Seeder
 
         $researcher = Role::firstOrCreate([
             'name' => 'INVESTIGADOR',
+            'guard_name' => 'web',
+        ]);
+
+        $user = Role::firstOrCreate([
+            'name' => 'USUARIO',
             'guard_name' => 'web',
         ]);
 
@@ -196,6 +213,12 @@ class RolesAndPermissionsSeeder extends Seeder
 
             'profile.view',
             'profile.edit',
+
+            'applications.view',
+            'applications.review',
+            'applications.observe',
+            'applications.approve',
+            'applications.reject',
         ]);
 
         $researcher->syncPermissions([
@@ -213,6 +236,18 @@ class RolesAndPermissionsSeeder extends Seeder
             'events.view',
             'calls.view',
             'notifications.view',
+            'applications.view-own',
+        ]);
+
+        $user->syncPermissions([
+            'dashboard.basic',
+            'profile.view',
+            'profile.edit',
+            'applications.create',
+            'applications.view-own',
+            'applications.edit-own',
+            'applications.submit',
+            'applications.withdraw',
         ]);
 
         $firstUser = User::first();

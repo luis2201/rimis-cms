@@ -44,4 +44,7 @@
         <h5><i class="fas fa-info-circle mr-1"></i> Bienvenido, {{ Auth::user()->name }}</h5>
         <p class="mb-0">Este espacio reunirá tus investigaciones, artículos enviados, eventos y notificaciones.</p>
     </div>
+    @if(Auth::user()->researcherApplication)
+        <div class="card card-success card-outline"><div class="card-header"><h3 class="card-title">Mi membresía RIMIS</h3></div><div class="card-body"><p>Consulta tu postulación aprobada y su historial.</p><a href="{{ route('applications.show') }}" class="btn btn-success">Ver membresía</a></div></div>
+    @endif
 </x-app-layout>
