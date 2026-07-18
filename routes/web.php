@@ -15,7 +15,17 @@ use App\Http\Controllers\SeoController;
 use App\Http\Controllers\SiteSettingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ResearcherApplicationController;
+use App\Http\Controllers\ResearcherSubmissionController;
 use App\Http\Controllers\Admin\ResearcherApplicationController as AdminResearcherApplicationController;
+use App\Http\Controllers\Admin\SubmissionReviewController;
+use App\Http\Controllers\ResearchPublicationController;
+use App\Http\Controllers\PublicResearchPublicationController;
+use App\Http\Controllers\Admin\ResearchPublicationController as AdminResearchPublicationController;
+use App\Http\Controllers\PublicResearcherController;
+use App\Http\Controllers\Admin\ResearcherDirectoryController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\HealthController;
 use App\Models\Bulletin;
 use App\Models\CallForProposal;
 use App\Models\Event;
@@ -35,39 +45,9 @@ use Illuminate\Support\Facades\Schema;
 |
 */
 
-Route::get('/', function () {
-    $seo = app(SeoService::class)->global();
-    $recentNews = Schema::hasTable('news')
-        ? News::published()->with(['category', 'featuredImage'])->latest('published_at')->limit(6)->get()
-        : collect();
-    $upcomingEvents = Schema::hasTable('events')
-        ? Event::published()->with('featuredImage')->where('ends_at', '>=', now())->orderBy('starts_at')->limit(3)->get()
-        : collect();
-    $openCalls = Schema::hasTable('calls')
-        ? CallForProposal::published()->with('featuredImage')->where('opens_at', '<=', now())->where('closes_at', '>=', now())->orderBy('closes_at')->limit(3)->get()
-        : collect();
-    $recentBulletins = Schema::hasTable('bulletins')
-        ? Bulletin::published()->with('coverImage')->latest('published_at')->limit(3)->get()
-        : collect();
-
-    return view('welcome', compact('seo', 'recentNews', 'upcomingEvents', 'openCalls', 'recentBulletins'));
-});
-
-Route::get('/dashboard', function () {
-    if (auth()->user()->can('dashboard.view')) {
-        return view('dashboard.admin');
-    }
-
-    if (auth()->user()->can('dashboard.researcher')) {
-        return view('dashboard.researcher');
-    }
-
-    if (auth()->user()->can('dashboard.basic')) {
-        return view('dashboard.user');
-    }
-
-    abort(403);
-})->middleware(['auth', 'researcher.verified', 'researcher.profile.complete'])->name('dashboard');
+Route::get('/', HomeController::class)->name('home');
+Route::get('/health', HealthController::class)->middleware('throttle:health')->name('health');
+Route::get('/dashboard', DashboardController::class)->middleware(['auth', 'researcher.verified', 'researcher.profile.complete'])->name('dashboard');
 
 Route::get('/pagina/{slug}', [PageController::class, 'publicShow'])->name('pages.show');
 Route::get('/noticias', [NewsController::class, 'publicIndex'])->name('news.index');
@@ -79,10 +59,17 @@ Route::get('/boletines/{slug}', [BulletinController::class, 'publicShow'])->name
 Route::get('/boletines/{bulletin}/pdf', [BulletinController::class, 'download'])->name('bulletins.download');
 Route::get('/eventos', [EventController::class, 'publicIndex'])->name('events.index');
 Route::get('/eventos/{slug}', [EventController::class, 'publicShow'])->name('events.show');
+Route::get('/eventos/{event:slug}/adjunto', [EventController::class, 'downloadAttachment'])->name('events.download');
 Route::get('/convocatorias', [CallForProposalController::class, 'publicIndex'])->name('calls.index');
 Route::get('/convocatorias/{slug}', [CallForProposalController::class, 'publicShow'])->name('calls.show');
 Route::get('/convocatorias/{call:slug}/bases', [CallForProposalController::class, 'download'])->name('calls.download');
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('seo.sitemap');
+Route::get('/investigaciones', [PublicResearchPublicationController::class, 'index'])->middleware('throttle:public-search')->name('research-publications.index');
+Route::get('/investigaciones/{slug}', [PublicResearchPublicationController::class, 'show'])->name('research-publications.show');
+Route::get('/investigaciones/{slug}/pdf', [PublicResearchPublicationController::class, 'pdf'])->name('research-publications.pdf');
+Route::get('/investigadores', [PublicResearcherController::class, 'index'])->middleware('throttle:public-search')->name('researchers.index');
+Route::get('/investigadores/{slug}', [PublicResearcherController::class, 'show'])->name('researchers.show');
+Route::get('/investigadores/{slug}/cv', [PublicResearcherController::class, 'cv'])->middleware('throttle:download')->name('researchers.cv');
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('seo.robots');
 
 Route::middleware('auth')->group(function () {
@@ -93,7 +80,7 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'researcher.verified'])->group(function () {
     Route::put('/profile/researcher', [ProfileController::class, 'updateResearcher'])->name('profile.researcher.update');
-    Route::get('/profile/{user}/curriculum', [ProfileController::class, 'downloadCv'])->name('profile.cv.download');
+    Route::get('/profile/{user}/curriculum', [ProfileController::class, 'downloadCv'])->middleware('throttle:download')->name('profile.cv.download');
 });
 
 Route::middleware(['auth', 'verified'])->prefix('postulacion')->name('applications.')->group(function () {
@@ -106,10 +93,48 @@ Route::middleware(['auth', 'verified'])->prefix('postulacion')->name('applicatio
     Route::post('/retirar', [ResearcherApplicationController::class, 'withdraw'])->middleware('can:applications.withdraw')->name('withdraw');
 });
 
-Route::middleware(['auth', 'researcher.verified'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'verified', 'role.researcher', 'researcher.profile.complete', 'can:submissions.view-own'])
+    ->prefix('investigador/aportes')->name('researcher.submissions.')->group(function () {
+        Route::get('/', [ResearcherSubmissionController::class, 'index'])->name('index');
+        foreach (['event', 'bulletin', 'call'] as $type) {
+            $plural = ['event'=>'eventos','bulletin'=>'boletines','call'=>'convocatorias'][$type];
+            $parameter = ['event'=>'event','bulletin'=>'bulletin','call'=>'call'][$type];
+            $permission = ['event'=>'events.submit','bulletin'=>'bulletins.submit','call'=>'calls.submit'][$type];
+            Route::get("$plural/crear", [ResearcherSubmissionController::class, $type.'Create'])->middleware("can:$permission")->name("$type.create");
+            Route::post($plural, [ResearcherSubmissionController::class, $type.'Store'])->middleware("can:$permission")->name("$type.store");
+            Route::get("$plural/{{$parameter}}/editar", [ResearcherSubmissionController::class, $type.'Edit'])->name("$type.edit");
+            Route::put("$plural/{{$parameter}}", [ResearcherSubmissionController::class, $type.'Update'])->name("$type.update");
+            Route::delete("$plural/{{$parameter}}", [ResearcherSubmissionController::class, $type.'Destroy'])->name("$type.destroy");
+            Route::post("$plural/{{$parameter}}/enviar", [ResearcherSubmissionController::class, $type.'Submit'])->middleware(["can:$permission", 'throttle:submission'])->name("$type.submit");
+            Route::get("$plural/{{$parameter}}/archivo", [ResearcherSubmissionController::class, $type.'Download'])->middleware('throttle:download')->name("$type.download");
+        }
+    });
+
+Route::middleware(['auth','verified','role.researcher','researcher.profile.complete'])->prefix('investigador/publicaciones')->name('researcher.publications.')->group(function(){
+ Route::get('/',[ResearchPublicationController::class,'index'])->middleware('can:research-publications.view-own')->name('index');
+ Route::get('/crear',[ResearchPublicationController::class,'create'])->middleware('can:research-publications.create')->name('create'); Route::post('/',[ResearchPublicationController::class,'store'])->middleware('can:research-publications.create')->name('store');
+ Route::get('/{publication}',[ResearchPublicationController::class,'show'])->middleware('can:research-publications.view-own')->name('show'); Route::get('/{publication}/editar',[ResearchPublicationController::class,'edit'])->middleware('can:research-publications.edit-own')->name('edit'); Route::put('/{publication}',[ResearchPublicationController::class,'update'])->middleware('can:research-publications.edit-own')->name('update'); Route::delete('/{publication}',[ResearchPublicationController::class,'destroy'])->middleware('can:research-publications.delete-own')->name('destroy'); Route::post('/{publication}/enviar',[ResearchPublicationController::class,'submit'])->middleware(['can:research-publications.submit','throttle:submission'])->name('submit'); Route::get('/{publication}/pdf',[ResearchPublicationController::class,'pdf'])->middleware(['can:research-publications.download-own','throttle:download'])->name('pdf');
+});
+
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('researchers',[ResearcherDirectoryController::class,'index'])->middleware('can:researchers.view')->name('researchers.index');
+    Route::get('researchers/{profile}/edit',[ResearcherDirectoryController::class,'edit'])->middleware('can:researchers.edit')->name('researchers.edit');
+    Route::put('researchers/{profile}',[ResearcherDirectoryController::class,'update'])->middleware('can:researchers.edit')->name('researchers.update');
+    Route::patch('researchers/{profile}/visibility',[ResearcherDirectoryController::class,'visibility'])->middleware('can:researchers.manage-visibility')->name('researchers.visibility');
+    Route::get('research-publications/{publication}/edit',[AdminResearchPublicationController::class,'edit'])->middleware('can:research-publications.edit')->name('research-publications.edit');
+    Route::put('research-publications/{publication}',[AdminResearchPublicationController::class,'update'])->middleware('can:research-publications.edit')->name('research-publications.update');
+    Route::get('submissions', [SubmissionReviewController::class, 'index'])->middleware('can:submissions.view')->name('submissions.index');
+    Route::get('submissions/{type}/{id}', [SubmissionReviewController::class, 'show'])->middleware('can:submissions.view')->name('submissions.show');
+    Route::get('submissions/{type}/{id}/download', [SubmissionReviewController::class, 'download'])->middleware(['can:submissions.view', 'throttle:download'])->name('submissions.download');
+    Route::patch('submissions/{type}/{id}/start-review', [SubmissionReviewController::class, 'startReview'])->middleware('can:submissions.review')->name('submissions.start-review');
+    Route::patch('submissions/{type}/{id}/observe', [SubmissionReviewController::class, 'observe'])->middleware('can:submissions.observe')->name('submissions.observe');
+    Route::patch('submissions/{type}/{id}/approve', [SubmissionReviewController::class, 'approve'])->middleware('can:submissions.approve')->name('submissions.approve');
+    Route::patch('submissions/{type}/{id}/reject', [SubmissionReviewController::class, 'reject'])->middleware('can:submissions.reject')->name('submissions.reject');
+    Route::patch('submissions/{type}/{id}/publish', [SubmissionReviewController::class, 'publish'])->middleware('can:submissions.publish')->name('submissions.publish');
+    Route::patch('submissions/{type}/{id}/unpublish', [SubmissionReviewController::class, 'unpublish'])->middleware('can:submissions.publish')->name('submissions.unpublish');
     Route::get('researcher-applications', [AdminResearcherApplicationController::class, 'index'])->middleware('can:applications.view')->name('researcher-applications.index');
     Route::get('researcher-applications/{application}', [AdminResearcherApplicationController::class, 'show'])->middleware('can:applications.view')->name('researcher-applications.show');
-    Route::get('researcher-applications/{application}/curriculum', [AdminResearcherApplicationController::class, 'downloadCv'])->middleware('can:applications.view')->name('researcher-applications.cv');
+    Route::get('researcher-applications/{application}/curriculum', [AdminResearcherApplicationController::class, 'downloadCv'])->middleware(['can:applications.view', 'throttle:download'])->name('researcher-applications.cv');
     Route::patch('researcher-applications/{application}/start-review', [AdminResearcherApplicationController::class, 'startReview'])->middleware('can:applications.review')->name('researcher-applications.start-review');
     Route::patch('researcher-applications/{application}/observe', [AdminResearcherApplicationController::class, 'observe'])->middleware('can:applications.observe')->name('researcher-applications.observe');
     Route::patch('researcher-applications/{application}/approve', [AdminResearcherApplicationController::class, 'approve'])->middleware('can:applications.approve')->name('researcher-applications.approve');

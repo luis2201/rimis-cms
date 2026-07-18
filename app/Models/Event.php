@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasContentReview;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class Event extends Model
 {
+    use HasContentReview;
     public const STATUS_DRAFT = 'draft';
 
     public const STATUS_PUBLISHED = 'published';
@@ -22,14 +25,24 @@ class Event extends Model
         'user_id', 'featured_image_id', 'title', 'slug', 'summary', 'description',
         'starts_at', 'ends_at', 'modality', 'location', 'organizer',
         'responsible_name', 'contact_email', 'contact_phone', 'website_url',
-        'status', 'published_at',
+        'status', 'published_at', 'origin', 'review_status', 'submitted_at',
+        'review_started_at', 'reviewed_at', 'reviewed_by', 'review_notes',
+        'attachment_path', 'attachment_original_name', 'attachment_mime_type', 'attachment_size',
     ];
 
     protected $casts = [
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',
         'published_at' => 'datetime',
+        'submitted_at' => 'datetime', 'review_started_at' => 'datetime', 'reviewed_at' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::deleting(function (Event $event) {
+            if ($event->attachment_path) Storage::disk('local')->delete($event->attachment_path);
+        });
+    }
 
     public function author(): BelongsTo
     {
@@ -39,11 +52,6 @@ class Event extends Model
     public function featuredImage(): BelongsTo
     {
         return $this->belongsTo(MediaFile::class, 'featured_image_id');
-    }
-
-    public function scopePublished(Builder $query): Builder
-    {
-        return $query->where('status', self::STATUS_PUBLISHED)->whereNotNull('published_at');
     }
 
     public function publish(): void

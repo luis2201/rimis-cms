@@ -30,6 +30,7 @@ class Kernel extends HttpKernel
      */
     protected $middlewareGroups = [
         'web' => [
+            \App\Http\Middleware\SecurityHeaders::class,
             \App\Http\Middleware\ApplyMailSettings::class,
             \App\Http\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
@@ -63,6 +64,7 @@ class Kernel extends HttpKernel
         'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         'researcher.profile.complete' => \App\Http\Middleware\EnsureResearcherProfileIsComplete::class,
         'researcher.verified' => \App\Http\Middleware\EnsureResearcherEmailIsVerified::class,
+        'role.researcher' => \App\Http\Middleware\EnsureResearcherRole::class,
         'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
         'signed' => \App\Http\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,

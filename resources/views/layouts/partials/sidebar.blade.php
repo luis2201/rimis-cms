@@ -140,6 +140,13 @@
                 @endcan
 
                 @can('settings.view')
+                    @can('researchers.view')
+                        <li class="nav-item"><a href="{{ route('admin.researchers.index') }}" class="nav-link {{ request()->routeIs('admin.researchers.*') ? 'active' : '' }}"><i class="nav-icon fas fa-user-graduate"></i><p>Investigadores</p></a></li>
+                    @endcan
+                    @can('submissions.view')
+                        @php($receivedCount = collect([\App\Models\Event::class, \App\Models\Bulletin::class, \App\Models\CallForProposal::class, \App\Models\ResearchPublication::class])->sum(fn($model) => $model::where('origin','researcher')->whereIn('review_status',['submitted','under_review'])->count()))
+                        <li class="nav-item {{ request()->routeIs('admin.submissions.*') ? 'menu-open' : '' }}"><a href="#" class="nav-link {{ request()->routeIs('admin.submissions.*') ? 'active' : '' }}"><i class="nav-icon fas fa-inbox"></i><p>Aportes recibidos <span class="badge badge-warning ml-1">{{ $receivedCount }}</span><i class="right fas fa-angle-left"></i></p></a><ul class="nav nav-treeview"><li class="nav-item"><a class="nav-link" href="{{ route('admin.submissions.index') }}">Todos</a></li><li class="nav-item"><a class="nav-link" href="{{ route('admin.submissions.index',['type'=>'event']) }}">Eventos</a></li><li class="nav-item"><a class="nav-link" href="{{ route('admin.submissions.index',['type'=>'bulletin']) }}">Boletines</a></li><li class="nav-item"><a class="nav-link" href="{{ route('admin.submissions.index',['type'=>'call']) }}">Convocatorias</a></li><li class="nav-item"><a class="nav-link" href="{{ route('admin.submissions.index',['type'=>'research_publication']) }}">Investigaciones</a></li></ul></li>
+                    @endcan
                     <li class="nav-item">
                         <a href="{{ route('admin.settings.mail.edit') }}" class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
                             <i class="nav-icon fas fa-envelope-open-text"></i>
@@ -162,9 +169,15 @@
                         </a>
                     </li>
                 @endcan
-                @can('applications.view-own')
+                @if(Auth::user()->hasAnyRole(['USUARIO','INVESTIGADOR']) && Auth::user()->can('applications.view-own'))
                     <li class="nav-item"><a href="{{ route('applications.show') }}" class="nav-link {{ request()->routeIs('applications.*') ? 'active' : '' }}"><i class="nav-icon fas fa-file-signature"></i><p>{{ Auth::user()->hasRole('INVESTIGADOR') ? 'Mi membresía RIMIS' : 'Mi postulación' }}</p></a></li>
-                @endcan
+                @endif
+                @if(Auth::user()->hasRole('INVESTIGADOR') && Auth::user()->can('submissions.view-own'))
+                    <li class="nav-item {{ request()->routeIs('researcher.submissions.*') ? 'menu-open' : '' }}"><a href="#" class="nav-link {{ request()->routeIs('researcher.submissions.*') ? 'active' : '' }}"><i class="nav-icon fas fa-paper-plane"></i><p>Mis aportes<i class="right fas fa-angle-left"></i></p></a><ul class="nav nav-treeview"><li class="nav-item"><a class="nav-link" href="{{ route('researcher.submissions.index') }}">Todos</a></li><li class="nav-item"><a class="nav-link" href="{{ route('researcher.submissions.index',['type'=>'event']) }}">Eventos</a></li><li class="nav-item"><a class="nav-link" href="{{ route('researcher.submissions.index',['type'=>'bulletin']) }}">Boletines</a></li><li class="nav-item"><a class="nav-link" href="{{ route('researcher.submissions.index',['type'=>'call']) }}">Convocatorias</a></li></ul></li>
+                @endif
+                @if(Auth::user()->hasRole('INVESTIGADOR') && Auth::user()->can('research-publications.view-own'))
+                    <li class="nav-item {{ request()->routeIs('researcher.publications.*') ? 'menu-open' : '' }}"><a href="#" class="nav-link {{ request()->routeIs('researcher.publications.*') ? 'active' : '' }}"><i class="nav-icon fas fa-book"></i><p>Mis publicaciones<i class="right fas fa-angle-left"></i></p></a><ul class="nav nav-treeview"><li class="nav-item"><a class="nav-link" href="{{ route('researcher.publications.index') }}">Todas</a></li><li class="nav-item"><a class="nav-link" href="{{ route('researcher.publications.create') }}">Nueva publicación</a></li><li class="nav-item"><a class="nav-link" href="{{ route('researcher.publications.index',['review_status'=>'draft']) }}">Borradores</a></li><li class="nav-item"><a class="nav-link" href="{{ route('researcher.publications.index',['review_status'=>'submitted']) }}">Enviadas</a></li><li class="nav-item"><a class="nav-link" href="{{ route('researcher.publications.index',['review_status'=>'under_review']) }}">En revisión</a></li><li class="nav-item"><a class="nav-link" href="{{ route('researcher.publications.index',['review_status'=>'observed']) }}">Observadas</a></li><li class="nav-item"><a class="nav-link" href="{{ route('researcher.publications.index',['review_status'=>'approved']) }}">Aprobadas</a></li><li class="nav-item"><a class="nav-link" href="{{ route('researcher.publications.index',['status'=>'published']) }}">Publicadas</a></li><li class="nav-item"><a class="nav-link" href="{{ route('researcher.publications.index',['review_status'=>'rejected']) }}">Rechazadas</a></li></ul></li>
+                @endif
             </ul>
         </nav>
     </div>

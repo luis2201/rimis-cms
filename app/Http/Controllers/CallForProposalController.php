@@ -41,7 +41,7 @@ class CallForProposalController extends Controller
 
     public function download(CallForProposal $call): StreamedResponse
     {
-        abort_unless($call->isPublished() && Storage::disk('local')->exists($call->bases_pdf_path), 404);
+        abort_unless($call->isPublished() && ($call->isStaffContent() || $call->isApprovedForPublication()) && Storage::disk('local')->exists($call->bases_pdf_path), 404);
 
         return Storage::disk('local')->download($call->bases_pdf_path, $call->bases_pdf_original_name);
     }
@@ -51,6 +51,8 @@ class CallForProposalController extends Controller
         $calls = CallForProposal::with('author')
             ->when($request->filled('search'), fn ($query) => $query->where('title', 'like', '%'.$request->string('search').'%'))
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
+            ->when($request->filled('origin'), fn ($query) => $query->where('origin', $request->string('origin')))
+            ->when($request->filled('review_status'), fn ($query) => $query->where('review_status', $request->string('review_status')))
             ->orderByDesc('opens_at')
             ->paginate(15)
             ->withQueryString();
@@ -75,6 +77,8 @@ class CallForProposalController extends Controller
             'bases_pdf_size' => $file->getSize(),
             'status' => CallForProposal::STATUS_DRAFT,
             'published_at' => null,
+            'origin' => CallForProposal::ORIGIN_STAFF,
+            'review_status' => CallForProposal::REVIEW_NOT_REQUIRED,
         ];
         $call = CallForProposal::create($validated);
 
@@ -102,6 +106,9 @@ class CallForProposalController extends Controller
         }
 
         $call->update($validated);
+        if ($call->isResearcherSubmission()) {
+            $call->reviewHistory()->create(['previous_status' => 'editorial:content', 'new_status' => 'editorial:content', 'comments' => 'Edición administrativa del contenido.', 'changed_by' => $request->user()->id]);
+        }
 
         return back()->with('success', 'Convocatoria actualizada correctamente.');
     }
@@ -115,6 +122,7 @@ class CallForProposalController extends Controller
 
     public function publish(CallForProposal $call): RedirectResponse
     {
+        abort_if($call->isResearcherSubmission() && ! $call->isApprovedForPublication(), 409, 'El aporte debe estar aprobado antes de publicarse.');
         $call->publish();
 
         return back()->with('success', 'Convocatoria publicada correctamente.');

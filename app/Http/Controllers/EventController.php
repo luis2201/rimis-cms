@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class EventController extends Controller
 {
@@ -35,11 +37,19 @@ class EventController extends Controller
         return view('events.show', compact('event'));
     }
 
+    public function downloadAttachment(Event $event): StreamedResponse
+    {
+        abort_unless($event->isPublished() && ($event->isStaffContent() || $event->isApprovedForPublication()) && $event->attachment_path && Storage::disk('local')->exists($event->attachment_path), 404);
+        return Storage::disk('local')->download($event->attachment_path, $event->attachment_original_name);
+    }
+
     public function index(Request $request): View
     {
         $events = Event::with('author')
             ->when($request->filled('search'), fn ($query) => $query->where('title', 'like', '%'.$request->string('search').'%'))
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
+            ->when($request->filled('origin'), fn ($query) => $query->where('origin', $request->string('origin')))
+            ->when($request->filled('review_status'), fn ($query) => $query->where('review_status', $request->string('review_status')))
             ->orderByDesc('starts_at')
             ->paginate(15)
             ->withQueryString();
@@ -59,6 +69,8 @@ class EventController extends Controller
             'user_id' => $request->user()->id,
             'status' => Event::STATUS_DRAFT,
             'published_at' => null,
+            'origin' => Event::ORIGIN_STAFF,
+            'review_status' => Event::REVIEW_NOT_REQUIRED,
         ];
         $event = Event::create($validated);
 
@@ -73,6 +85,9 @@ class EventController extends Controller
     public function update(Request $request, Event $event): RedirectResponse
     {
         $event->update($this->validateEvent($request, $event));
+        if ($event->isResearcherSubmission()) {
+            $event->reviewHistory()->create(['previous_status' => 'editorial:content', 'new_status' => 'editorial:content', 'comments' => 'Edición administrativa del contenido.', 'changed_by' => $request->user()->id]);
+        }
 
         return back()->with('success', 'Evento actualizado correctamente.');
     }
@@ -86,6 +101,7 @@ class EventController extends Controller
 
     public function publish(Event $event): RedirectResponse
     {
+        abort_if($event->isResearcherSubmission() && ! $event->isApprovedForPublication(), 409, 'El aporte debe estar aprobado antes de publicarse.');
         $event->publish();
 
         return back()->with('success', 'Evento publicado correctamente.');

@@ -1,3 +1,4 @@
+@isset($call) @if($call->isResearcherSubmission())<div class="alert alert-info"><strong>Contenido enviado por un investigador.</strong> Remitente: {{ $call->author?->name }} · Revisión: {{ $call->reviewStatusLabel() }}</div>@endif @endisset
 <div class="row">
     <div class="form-group col-md-8">
         <label>Título <span class="text-danger">*</span></label>

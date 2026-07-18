@@ -30,7 +30,7 @@ class BulletinController extends Controller
 
     public function download(Bulletin $bulletin): StreamedResponse
     {
-        abort_unless($bulletin->isPublished() && Storage::disk('local')->exists($bulletin->pdf_path), 404);
+        abort_unless($bulletin->isPublished() && ($bulletin->isStaffContent() || $bulletin->isApprovedForPublication()) && Storage::disk('local')->exists($bulletin->pdf_path), 404);
 
         return Storage::disk('local')->download($bulletin->pdf_path, $bulletin->pdf_original_name);
     }
@@ -40,6 +40,8 @@ class BulletinController extends Controller
         $bulletins = Bulletin::with('author')
             ->when($request->filled('search'), fn ($query) => $query->where('title', 'like', '%'.$request->string('search').'%'))
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
+            ->when($request->filled('origin'), fn ($query) => $query->where('origin', $request->string('origin')))
+            ->when($request->filled('review_status'), fn ($query) => $query->where('review_status', $request->string('review_status')))
             ->latest()
             ->paginate(15)
             ->withQueryString();
@@ -63,6 +65,9 @@ class BulletinController extends Controller
             'pdf_original_name' => $file->getClientOriginalName(),
             'pdf_size' => $file->getSize(),
             'status' => Bulletin::STATUS_DRAFT,
+            'published_at' => null,
+            'origin' => Bulletin::ORIGIN_STAFF,
+            'review_status' => Bulletin::REVIEW_NOT_REQUIRED,
         ];
         $bulletin = Bulletin::create($validated);
 
@@ -90,6 +95,9 @@ class BulletinController extends Controller
         }
 
         $bulletin->update($validated);
+        if ($bulletin->isResearcherSubmission()) {
+            $bulletin->reviewHistory()->create(['previous_status' => 'editorial:content', 'new_status' => 'editorial:content', 'comments' => 'Edición administrativa del contenido.', 'changed_by' => $request->user()->id]);
+        }
 
         return back()->with('success', 'Boletín actualizado correctamente.');
     }
@@ -103,6 +111,7 @@ class BulletinController extends Controller
 
     public function publish(Bulletin $bulletin): RedirectResponse
     {
+        abort_if($bulletin->isResearcherSubmission() && ! $bulletin->isApprovedForPublication(), 409, 'El aporte debe estar aprobado antes de publicarse.');
         $bulletin->publish();
 
         return back()->with('success', 'Boletín publicado correctamente.');

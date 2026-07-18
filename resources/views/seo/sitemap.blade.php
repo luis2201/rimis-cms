@@ -34,4 +34,11 @@
         <lastmod>{{ $item->updated_at->toAtomString() }}</lastmod>
     </url>
 @endforeach
+@foreach($researchPublications as $item)
+    <url><loc>{{ route('research-publications.show', $item->slug) }}</loc><lastmod>{{ $item->updated_at->toAtomString() }}</lastmod></url>
+@endforeach
+    <url><loc>{{ route('researchers.index') }}</loc><lastmod>{{ now()->toAtomString() }}</lastmod></url>
+@foreach($researcherProfiles as $profile)
+    <url><loc>{{ route('researchers.show', $profile->public_slug) }}</loc><lastmod>{{ $profile->updated_at->toAtomString() }}</lastmod></url>
+@endforeach
 </urlset>
