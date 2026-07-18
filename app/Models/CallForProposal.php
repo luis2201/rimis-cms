@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasContentReview;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,6 +10,7 @@ use Illuminate\Support\Facades\Storage;
 
 class CallForProposal extends Model
 {
+    use HasContentReview;
     public const STATUS_DRAFT = 'draft';
 
     public const STATUS_PUBLISHED = 'published';
@@ -19,6 +21,7 @@ class CallForProposal extends Model
         'user_id', 'featured_image_id', 'title', 'slug', 'summary', 'description',
         'opens_at', 'closes_at', 'bases_pdf_path', 'bases_pdf_original_name',
         'bases_pdf_size', 'registration_enabled', 'registration_url', 'status', 'published_at',
+        'origin', 'review_status', 'submitted_at', 'review_started_at', 'reviewed_at', 'reviewed_by', 'review_notes',
     ];
 
     protected $casts = [
@@ -26,6 +29,7 @@ class CallForProposal extends Model
         'closes_at' => 'datetime',
         'registration_enabled' => 'boolean',
         'published_at' => 'datetime',
+        'submitted_at' => 'datetime', 'review_started_at' => 'datetime', 'reviewed_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -45,11 +49,6 @@ class CallForProposal extends Model
     public function featuredImage(): BelongsTo
     {
         return $this->belongsTo(MediaFile::class, 'featured_image_id');
-    }
-
-    public function scopePublished(Builder $query): Builder
-    {
-        return $query->where('status', self::STATUS_PUBLISHED)->whereNotNull('published_at');
     }
 
     public function publish(): void

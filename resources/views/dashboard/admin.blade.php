@@ -4,6 +4,19 @@
     </x-slot>
 
     <div class="row">
+        @can('researchers.view')
+            @php($approvedProfiles=\App\Models\ResearcherProfile::whereHas('user.researcherApplication',fn($q)=>$q->where('status','approved'))->whereHas('user',fn($q)=>$q->where('is_active',true)->role('INVESTIGADOR')))
+            @foreach([['Aprobados',(clone $approvedProfiles)->count(),''],['Perfiles públicos',(clone $approvedProfiles)->where('profile_public',true)->count(),'1'],['Perfiles ocultos',(clone $approvedProfiles)->where('profile_public',false)->count(),'0']] as [$label,$count,$visible])
+                <div class="col-lg-2 col-6"><div class="small-box bg-info"><div class="inner"><h3>{{ $count }}</h3><p>{{ $label }}</p></div><a href="{{ route('admin.researchers.index',$visible===''?[]:['profile_public'=>$visible]) }}" class="small-box-footer">Ver investigadores</a></div></div>
+            @endforeach
+        @endcan
+        @can('submissions.view')
+            @php($contentModels=[\App\Models\Event::class,\App\Models\Bulletin::class,\App\Models\CallForProposal::class,\App\Models\ResearchPublication::class])
+            @foreach(['submitted'=>'Aportes enviados','under_review'=>'En revisión','observed'=>'Observados','approved'=>'Aprobados pendientes','published'=>'Publicados','rejected'=>'Rechazados'] as $state=>$label)
+                @php($count=collect($contentModels)->sum(fn($m)=>$state==='published' ? $m::where('origin','researcher')->where('status','published')->count() : $m::where('origin','researcher')->where('review_status',$state)->when($state==='approved',fn($q)=>$q->where('status','draft'))->count()))
+                <div class="col-lg-2 col-6"><div class="small-box bg-light"><div class="inner"><h3>{{ $count }}</h3><p>{{ $label }}</p></div><a href="{{ route('admin.submissions.index',$state==='published'?['status'=>'published']:['review_status'=>$state]) }}" class="small-box-footer">Ver aportes <i class="fas fa-arrow-circle-right"></i></a></div></div>
+            @endforeach
+        @endcan
         @can('media.view')
             <div class="col-lg-3 col-6">
                 <div class="small-box bg-info">

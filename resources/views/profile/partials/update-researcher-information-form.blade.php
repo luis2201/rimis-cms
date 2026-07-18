@@ -60,6 +60,11 @@
         @error('research_area')<span class="invalid-feedback">{{ $message }}</span>@enderror
     </div>
 
+    <div class="form-group">
+        <label for="research_line">Línea de investigación</label>
+        <input id="research_line" name="research_line" class="form-control" value="{{ old('research_line', $researcherProfile?->research_line) }}">
+    </div>
+
     <div class="row">
         <div class="form-group col-md-8">
             <label for="institution">Institución <span class="text-danger">*</span></label>
@@ -88,6 +93,24 @@
             </a>
         @endif
     </div>
+
+    @if($user->hasRole('INVESTIGADOR'))
+    <hr><h4>Perfil público y privacidad</h4>
+    @if($researcherProfile && !$researcherProfile->profile_public)<div class="alert alert-warning">Tu perfil público está oculto administrativamente. Puedes actualizar los datos, pero no reactivarlo.</div>@endif
+    <div class="form-group"><label for="public_bio">Biografía pública</label><textarea id="public_bio" name="public_bio" rows="5" class="form-control">{{ old('public_bio',$researcherProfile?->public_bio) }}</textarea></div>
+    <div class="row">
+        @foreach(['orcid'=>'ORCID','google_scholar_url'=>'Google Scholar','researchgate_url'=>'ResearchGate','linkedin_url'=>'LinkedIn','personal_website_url'=>'Sitio web'] as $field=>$label)
+        <div class="form-group col-md-6"><label>{{ $label }}</label><input name="{{ $field }}" class="form-control" value="{{ old($field,$researcherProfile?->{$field}) }}">@error($field)<span class="text-danger">{{ $message }}</span>@enderror</div>
+        @endforeach
+        <div class="form-group col-md-6"><label>Fotografía de la biblioteca</label><select name="profile_photo_id" class="form-control"><option value="">Usar iniciales</option>@foreach($profileImages as $image)<option value="{{ $image->id }}" @selected(old('profile_photo_id',$researcherProfile?->profile_photo_id)==$image->id)>{{ $image->name }}</option>@endforeach</select></div>
+    </div>
+    <p class="text-muted">Correo, teléfono y currículo permanecen privados salvo que los autorices expresamente.</p>
+    <div class="row">
+        @foreach(['public_email'=>'Mostrar correo','public_phone'=>'Mostrar teléfono','public_institution'=>'Mostrar institución','public_country'=>'Mostrar país','public_research_area'=>'Mostrar área','public_research_line'=>'Mostrar línea','public_cv'=>'Permitir descarga del CV','publications_section_enabled'=>'Mostrar publicaciones','contributions_section_enabled'=>'Mostrar aportes'] as $field=>$label)
+        <div class="col-md-4 form-group"><div class="custom-control custom-switch"><input type="checkbox" class="custom-control-input" id="{{ $field }}" name="{{ $field }}" value="1" @checked(old($field,$researcherProfile?->{$field}))><label class="custom-control-label" for="{{ $field }}">{{ $label }}</label></div></div>
+        @endforeach
+    </div>
+    @endif
 
     <button type="submit" class="btn btn-primary">
         <i class="fas fa-save mr-1"></i> Guardar información profesional

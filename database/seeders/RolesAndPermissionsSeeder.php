@@ -13,6 +13,13 @@ class RolesAndPermissionsSeeder extends Seeder
     {
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
+        Permission::whereIn('name', [
+            'research-publications.observe',
+            'research-publications.approve',
+            'research-publications.reject',
+            'research-publications.unpublish',
+        ])->delete();
+
         $permissions = [
             'dashboard.view',
             'dashboard.basic',
@@ -113,6 +120,19 @@ class RolesAndPermissionsSeeder extends Seeder
             'applications.observe',
             'applications.approve',
             'applications.reject',
+            'submissions.view-own',
+            'events.submit',
+            'bulletins.submit',
+            'calls.submit',
+            'submissions.view',
+            'submissions.review',
+            'submissions.observe',
+            'submissions.approve',
+            'submissions.reject',
+            'submissions.publish',
+            'research-publications.view-own','research-publications.create','research-publications.edit-own','research-publications.delete-own','research-publications.submit','research-publications.download-own',
+            'research-publications.view','research-publications.review','research-publications.edit','research-publications.publish',
+            'researcher-profile.manage-privacy','researchers.manage-visibility',
         ];
 
         foreach ($permissions as $permission) {
@@ -219,6 +239,14 @@ class RolesAndPermissionsSeeder extends Seeder
             'applications.observe',
             'applications.approve',
             'applications.reject',
+            'submissions.view',
+            'submissions.review',
+            'submissions.observe',
+            'submissions.approve',
+            'submissions.reject',
+            'submissions.publish',
+            'research-publications.view','research-publications.review','research-publications.edit','research-publications.publish',
+            'researchers.manage-visibility',
         ]);
 
         $researcher->syncPermissions([
@@ -237,6 +265,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'calls.view',
             'notifications.view',
             'applications.view-own',
+            'submissions.view-own',
+            'events.submit',
+            'bulletins.submit',
+            'calls.submit',
+            'research-publications.view-own','research-publications.create','research-publications.edit-own','research-publications.delete-own','research-publications.submit','research-publications.download-own',
+            'researcher-profile.manage-privacy',
         ]);
 
         $user->syncPermissions([

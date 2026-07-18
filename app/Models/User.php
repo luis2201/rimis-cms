@@ -69,6 +69,9 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(ResearcherApplicationHistory::class, 'changed_by');
     }
+    public function researchPublications(): HasMany { return $this->hasMany(ResearchPublication::class); }
+    public function researchPublicationAuthorships(): HasMany { return $this->hasMany(ResearchPublicationAuthor::class); }
+    public function reviewedResearchPublications(): HasMany { return $this->hasMany(ResearchPublication::class, 'reviewed_by'); }
 
     public function hasCompleteResearcherProfile(): bool
     {

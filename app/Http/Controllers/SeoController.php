@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Bulletin;
 use App\Models\CallForProposal;
+use App\Models\ResearchPublication;
+use App\Models\ResearcherProfile;
 use App\Models\Event;
 use App\Models\MediaFile;
 use App\Models\News;
@@ -54,6 +56,8 @@ class SeoController extends Controller
             'bulletins' => Bulletin::published()->latest('updated_at')->get(),
             'events' => Event::published()->latest('updated_at')->get(),
             'calls' => CallForProposal::published()->latest('updated_at')->get(),
+            'researchPublications' => ResearchPublication::publiclyVisible()->latest('updated_at')->get(),
+            'researcherProfiles' => ResearcherProfile::publiclyVisible()->latest('updated_at')->get(),
         ])
             ->header('Content-Type', 'application/xml');
     }

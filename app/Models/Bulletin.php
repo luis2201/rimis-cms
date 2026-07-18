@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasContentReview;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,16 +10,18 @@ use Illuminate\Support\Facades\Storage;
 
 class Bulletin extends Model
 {
+    use HasContentReview;
     public const STATUS_DRAFT = 'draft';
 
     public const STATUS_PUBLISHED = 'published';
 
     protected $fillable = [
         'user_id', 'cover_image_id', 'title', 'slug', 'description', 'pdf_path',
-        'pdf_original_name', 'pdf_size', 'status', 'published_at',
+        'pdf_original_name', 'pdf_size', 'status', 'published_at', 'origin', 'review_status',
+        'submitted_at', 'review_started_at', 'reviewed_at', 'reviewed_by', 'review_notes',
     ];
 
-    protected $casts = ['published_at' => 'datetime'];
+    protected $casts = ['published_at' => 'datetime', 'submitted_at' => 'datetime', 'review_started_at' => 'datetime', 'reviewed_at' => 'datetime'];
 
     protected static function booted(): void
     {
@@ -37,11 +40,6 @@ class Bulletin extends Model
     public function coverImage(): BelongsTo
     {
         return $this->belongsTo(MediaFile::class, 'cover_image_id');
-    }
-
-    public function scopePublished(Builder $query): Builder
-    {
-        return $query->where('status', self::STATUS_PUBLISHED)->whereNotNull('published_at');
     }
 
     public function publish(): void

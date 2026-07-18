@@ -6,6 +6,7 @@ use App\Http\Requests\ProfileUpdateRequest;
 use App\Http\Requests\ResearcherProfileUpdateRequest;
 use App\Models\ResearcherProfile;
 use App\Models\User;
+use App\Models\MediaFile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -26,6 +27,7 @@ class ProfileController extends Controller
             'salutations' => ResearcherProfile::SALUTATIONS,
             'countries' => ResearcherProfile::COUNTRIES,
             'researchAreas' => ResearcherProfile::RESEARCH_AREAS,
+            'profileImages' => MediaFile::where('file_type', 'image')->where('status', true)->latest()->get(),
         ]);
     }
 
@@ -44,6 +46,10 @@ class ProfileController extends Controller
         }
 
         unset($validated['cv']);
+        $validated['public_bio'] = isset($validated['public_bio']) ? strip_tags($validated['public_bio']) : null;
+        foreach (['public_email','public_phone','public_institution','public_country','public_research_area','public_research_line','public_cv','publications_section_enabled','contributions_section_enabled'] as $field) {
+            $validated[$field] = $request->boolean($field);
+        }
         $validated['completed_at'] = now();
 
         $request->user()->researcherProfile()->updateOrCreate([], $validated);
