@@ -7,7 +7,7 @@
     </div>
 @endif
 
-<form method="POST" action="{{ route('profile.researcher.update') }}" enctype="multipart/form-data">
+<form id="researcher-information-form" method="POST" action="{{ route('profile.researcher.update') }}" enctype="multipart/form-data">
     @csrf
     @method('PUT')
 
@@ -87,6 +87,7 @@
             @error('cv')<span class="invalid-feedback">{{ $message }}</span>@enderror
         </div>
         <small class="form-text text-muted">Máximo 5 MB. El archivo se almacena de forma privada.</small>
+        <div id="cv-size-feedback" class="invalid-feedback d-none" role="alert" aria-live="polite"></div>
         @if ($researcherProfile?->cv_path)
             <a href="{{ route('profile.cv.download', $user) }}" class="btn btn-sm btn-outline-primary mt-2">
                 <i class="fas fa-file-pdf mr-1"></i> Descargar {{ $researcherProfile->cv_original_name }}
@@ -112,7 +113,53 @@
     </div>
     @endif
 
-    <button type="submit" class="btn btn-primary">
+    <button type="submit" id="researcher-profile-save" class="btn btn-primary">
         <i class="fas fa-save mr-1"></i> Guardar información profesional
     </button>
 </form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('researcher-information-form');
+        const cvInput = document.getElementById('cv');
+        const saveButton = document.getElementById('researcher-profile-save');
+        const feedback = document.getElementById('cv-size-feedback');
+        const maxBytes = 5 * 1024 * 1024;
+
+        function validateCvFile() {
+            if (!cvInput || !saveButton || !feedback) {
+                return;
+            }
+
+            const file = cvInput.files[0];
+            if (!file) {
+                feedback.textContent = '';
+                feedback.classList.add('d-none');
+                cvInput.classList.remove('is-invalid');
+                saveButton.disabled = false;
+                return;
+            }
+
+            if (file.size > maxBytes) {
+                feedback.textContent = 'El archivo supera el límite de 5 MB. Selecciona un PDF más pequeño antes de guardar.';
+                feedback.classList.remove('d-none');
+                cvInput.classList.add('is-invalid');
+                saveButton.disabled = true;
+            } else {
+                feedback.textContent = '';
+                feedback.classList.add('d-none');
+                cvInput.classList.remove('is-invalid');
+                saveButton.disabled = false;
+            }
+        }
+
+        cvInput?.addEventListener('change', validateCvFile);
+        form?.addEventListener('submit', function (event) {
+            if (cvInput?.files?.[0]?.size > maxBytes) {
+                event.preventDefault();
+                validateCvFile();
+                cvInput.focus();
+            }
+        });
+    });
+</script>
