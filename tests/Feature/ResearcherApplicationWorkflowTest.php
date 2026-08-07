@@ -158,6 +158,44 @@ class ResearcherApplicationWorkflowTest extends TestCase
         $this->actingAs($admin)->get(route('admin.researcher-applications.cv', $user->researcherApplication))->assertOk();
     }
 
+    public function test_approved_researcher_can_download_personalized_certificate(): void
+    {
+        $user = $this->submittedApplicationOwner();
+        $application = $user->researcherApplication;
+        $admin = $this->user('ADMINISTRADOR');
+
+        $this->actingAs($admin)->patch(route('admin.researcher-applications.start-review', $application));
+        $this->actingAs($admin)->patch(route('admin.researcher-applications.approve', $application));
+
+        $this->actingAs($user->fresh())
+            ->get(route('applications.show'))
+            ->assertOk()
+            ->assertSee('Descargar certificación RIMIS')
+            ->assertSee(route('applications.certificate'), false);
+
+        $response = $this->actingAs($user->fresh())->get(route('applications.certificate'));
+
+        $response->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+        $cacheControl = $response->headers->get('cache-control');
+        $this->assertStringContainsString('private', $cacheControl);
+        $this->assertStringContainsString('no-store', $cacheControl);
+        $this->assertStringContainsString('max-age=0', $cacheControl);
+        $this->assertStringStartsWith('%PDF-', $response->getContent());
+        $this->assertStringContainsString('certificacion-rimis-', $response->headers->get('content-disposition'));
+    }
+
+    public function test_certificate_is_forbidden_before_application_approval(): void
+    {
+        $user = $this->submittedApplicationOwner();
+        $user->removeRole('USUARIO');
+        $user->assignRole('INVESTIGADOR');
+
+        $this->actingAs($user->fresh())
+            ->get(route('applications.certificate'))
+            ->assertForbidden();
+    }
+
     private function submittedApplicationOwner(): User
     {
         $user = $this->user('USUARIO'); $this->completeProfile($user); $application = $this->draft($user);
