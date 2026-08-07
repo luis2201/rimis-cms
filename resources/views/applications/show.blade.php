@@ -5,7 +5,9 @@
             @if($application->isSubmitted())<div class="alert alert-info">Tu postulación está pendiente de revisión.</div>@endif
             @if($application->isUnderReview())<div class="alert alert-info">La revisión inició {{ optional($application->review_started_at)->format('d/m/Y H:i') }}.</div>@endif
             @if($application->isObserved())<div class="alert alert-warning"><strong>Observaciones:</strong> {{ $application->review_notes }}</div>@endif
-            @if($application->isApproved())<div class="alert alert-success">Ya formas parte de la Red de Investigadores RIMIS.</div>@endif
+            @if($application->isApproved())
+                <div class="alert alert-success">Ya formas parte de la Red de Investigadores RIMIS.</div>
+            @endif
             @if($application->isRejected())<div class="alert alert-danger"><strong>Razón:</strong> {{ $application->review_notes }}</div>@endif
             @if($application->isWithdrawn())<div class="alert alert-secondary">Esta postulación fue retirada y no puede reactivarse.</div>@endif
             <dl><dt>Motivación</dt><dd>{{ $application->motivation ?: 'Sin completar' }}</dd><dt>Experiencia</dt><dd>{{ $application->experience_summary ?: 'Sin completar' }}</dd><dt>Contribución esperada</dt><dd>{{ $application->expected_contribution ?: 'Sin completar' }}</dd></dl>
@@ -16,5 +18,12 @@
             </div>
         </div></div>
         <div class="card"><div class="card-header"><h3 class="card-title">Historial</h3></div><div class="card-body">@include('applications._history')</div></div>
-    </div><div class="col-lg-4"><div class="card"><div class="card-body"><a href="{{ route('profile.edit') }}" class="btn btn-outline-primary btn-block">Mi perfil profesional</a></div></div></div></div>
+    </div><div class="col-lg-4"><div class="card"><div class="card-body">
+        <a href="{{ route('profile.edit') }}" class="btn btn-outline-primary btn-block">Mi perfil profesional</a>
+        @if($application->isApproved() && auth()->user()->hasRole('INVESTIGADOR'))
+            <a href="{{ route('applications.certificate') }}" class="btn btn-danger btn-block mt-2">
+                <i class="fas fa-file-pdf mr-1"></i> Descargar certificación RIMIS
+            </a>
+        @endif
+    </div></div></div></div>
 </x-app-layout>

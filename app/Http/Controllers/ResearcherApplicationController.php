@@ -7,8 +7,11 @@ use App\Http\Requests\SaveResearcherApplicationRequest;
 use App\Http\Requests\SubmitResearcherApplicationRequest;
 use App\Models\ResearcherApplication;
 use App\Services\ResearcherApplicationWorkflowService;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Response;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class ResearcherApplicationController extends Controller
@@ -68,5 +71,44 @@ class ResearcherApplicationController extends Controller
         $this->authorize('withdraw', $application);
         $this->workflow->withdraw($application, $request->user());
         return redirect()->route('applications.show')->with('success', 'Postulación retirada.');
+    }
+
+    public function certificate(Request $request): Response
+    {
+        $user = $request->user()->load(['researcherApplication', 'researcherProfile']);
+        $application = $user->researcherApplication;
+
+        abort_unless($application?->isApproved() && $user->hasRole('INVESTIGADOR'), 403);
+        abort_unless($user->researcherProfile, 404);
+
+        $profile = $user->researcherProfile;
+        $issuedAt = $application->reviewed_at ?? $application->updated_at;
+        $months = [
+            1 => 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+            'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+        ];
+        $salutations = [
+            'Señor' => 'Sr.', 'Señora' => 'Sra.', 'Señorita' => 'Srta.',
+            'Doctor' => 'Dr.', 'Doctora' => 'Dra.',
+            'Profesor' => 'Prof.', 'Profesora' => 'Prof.',
+        ];
+        $female = in_array($profile->salutation, ['Señora', 'Señorita', 'Doctora', 'Profesora'], true);
+
+        $pdf = Pdf::loadView('applications.certificate', [
+            'article' => $female ? 'la' : 'el',
+            'salutation' => $salutations[$profile->salutation] ?? $profile->academic_title,
+            'name' => $user->name,
+            'role' => $female ? 'Investigadora' : 'Investigador',
+            'memberNoun' => $female ? 'investigadora' : 'investigador',
+            'registered' => $female ? 'registrada' : 'registrado',
+            'interestedPhrase' => $female ? 'de la interesada' : 'del interesado',
+            'researchLine' => $profile->research_line ?: $profile->research_area,
+            'city' => 'Portoviejo',
+            'day' => $issuedAt->day,
+            'month' => $months[$issuedAt->month],
+            'year' => $issuedAt->year,
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->download('certificacion-rimis-'.Str::slug($user->name).'.pdf');
     }
 }

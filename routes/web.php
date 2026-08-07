@@ -91,6 +91,9 @@ Route::middleware(['auth', 'verified'])->prefix('postulacion')->name('applicatio
     Route::put('/', [ResearcherApplicationController::class, 'update'])->middleware('can:applications.edit-own')->name('update');
     Route::post('/enviar', [ResearcherApplicationController::class, 'submit'])->middleware('can:applications.submit')->name('submit');
     Route::post('/retirar', [ResearcherApplicationController::class, 'withdraw'])->middleware('can:applications.withdraw')->name('withdraw');
+    Route::get('/certificacion', [ResearcherApplicationController::class, 'certificate'])
+        ->middleware(['role.researcher', 'throttle:download'])
+        ->name('certificate');
 });
 
 Route::middleware(['auth', 'verified', 'role.researcher', 'researcher.profile.complete', 'can:submissions.view-own'])
