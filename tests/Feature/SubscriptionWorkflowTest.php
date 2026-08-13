@@ -15,6 +15,18 @@ class SubscriptionWorkflowTest extends TestCase
         $s=Subscription::firstOrFail();$this->assertSame('submitted',$s->status);$this->assertNull($s->user_id);$this->assertDatabaseMissing('users',['email'=>$s->email]);
         Notification::assertSentOnDemand(SubscriptionStatusNotification::class);
     }
+    public function test_conditional_fields_are_focusable_only_when_their_option_is_selected():void
+    {
+        $this->get(route('subscriptions.create','professional'))
+            ->assertOk()
+            ->assertSee('id="first_names" type="text"', false)
+            ->assertDontSee('type="professional"', false)
+            ->assertSee('x-bind:required="otherArea"', false);
+
+        $this->get(route('subscriptions.create','institutional'))
+            ->assertOk()
+            ->assertSee('x-bind:required="otherInstitution"', false);
+    }
     public function test_duplicate_email_identification_and_phone_are_rejected():void
     {
         $this->post(route('subscriptions.store','professional'),$this->professional());
