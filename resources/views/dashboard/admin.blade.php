@@ -4,11 +4,11 @@
     </x-slot>
 
     <div class="row">
-        @can('researchers.view')
-            @php($approvedProfiles=\App\Models\ResearcherProfile::whereHas('user.researcherApplication',fn($q)=>$q->where('status','approved'))->whereHas('user',fn($q)=>$q->where('is_active',true)->role('INVESTIGADOR')))
-            @foreach([['Aprobados',(clone $approvedProfiles)->count(),''],['Perfiles públicos',(clone $approvedProfiles)->where('profile_public',true)->count(),'1'],['Perfiles ocultos',(clone $approvedProfiles)->where('profile_public',false)->count(),'0']] as [$label,$count,$visible])
-                <div class="col-lg-2 col-6"><div class="small-box bg-info"><div class="inner"><h3>{{ $count }}</h3><p>{{ $label }}</p></div><a href="{{ route('admin.researchers.index',$visible===''?[]:['profile_public'=>$visible]) }}" class="small-box-footer">Ver investigadores</a></div></div>
+        @can('subscriptions.view')
+            @foreach([['professional','Profesionales'],['institutional','Instituciones']] as [$type,$label])
+                <div class="col-lg-2 col-6"><div class="small-box bg-info"><div class="inner"><h3>{{ \App\Models\Subscription::where('type',$type)->where('status','approved')->count() }}</h3><p>{{ $label }}</p></div><a href="{{ route('admin.subscriptions.index',['type'=>$type,'status'=>'approved']) }}" class="small-box-footer">Ver suscripciones</a></div></div>
             @endforeach
+            <div class="col-lg-2 col-6"><div class="small-box bg-warning"><div class="inner"><h3>{{ \App\Models\Subscription::whereIn('status',['submitted','under_review'])->count() }}</h3><p>Pendientes</p></div><a href="{{ route('admin.subscriptions.index') }}" class="small-box-footer">Revisar suscripciones</a></div></div>
         @endcan
         @can('submissions.view')
             @php($contentModels=[\App\Models\Event::class,\App\Models\Bulletin::class,\App\Models\CallForProposal::class,\App\Models\ResearchPublication::class])

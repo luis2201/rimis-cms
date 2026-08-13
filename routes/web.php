@@ -14,9 +14,11 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SeoController;
 use App\Http\Controllers\SiteSettingController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\ResearcherApplicationController;
+use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\MembershipController;
+use App\Http\Controllers\PublicInstitutionController;
 use App\Http\Controllers\ResearcherSubmissionController;
-use App\Http\Controllers\Admin\ResearcherApplicationController as AdminResearcherApplicationController;
+use App\Http\Controllers\Admin\SubscriptionController as AdminSubscriptionController;
 use App\Http\Controllers\Admin\SubmissionReviewController;
 use App\Http\Controllers\ResearchPublicationController;
 use App\Http\Controllers\PublicResearchPublicationController;
@@ -69,7 +71,12 @@ Route::get('/investigaciones/{slug}', [PublicResearchPublicationController::clas
 Route::get('/investigaciones/{slug}/pdf', [PublicResearchPublicationController::class, 'pdf'])->name('research-publications.pdf');
 Route::get('/investigadores', [PublicResearcherController::class, 'index'])->middleware('throttle:public-search')->name('researchers.index');
 Route::get('/investigadores/{slug}', [PublicResearcherController::class, 'show'])->name('researchers.show');
-Route::get('/investigadores/{slug}/cv', [PublicResearcherController::class, 'cv'])->middleware('throttle:download')->name('researchers.cv');
+Route::get('/instituciones', [PublicInstitutionController::class, 'index'])->middleware('throttle:public-search')->name('institutions.index');
+Route::get('/instituciones/{slug}', [PublicInstitutionController::class, 'show'])->name('institutions.show');
+Route::get('/suscripciones', [SubscriptionController::class, 'index'])->name('subscriptions.index');
+Route::get('/suscripciones/enviada', [SubscriptionController::class, 'sent'])->name('subscriptions.sent');
+Route::get('/suscripciones/{type}', [SubscriptionController::class, 'create'])->whereIn('type',['professional','institutional'])->name('subscriptions.create');
+Route::post('/suscripciones/{type}', [SubscriptionController::class, 'store'])->whereIn('type',['professional','institutional'])->middleware('throttle:registration')->name('subscriptions.store');
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('seo.robots');
 
 Route::middleware('auth')->group(function () {
@@ -83,20 +90,12 @@ Route::middleware(['auth', 'researcher.verified'])->group(function () {
     Route::get('/profile/{user}/curriculum', [ProfileController::class, 'downloadCv'])->middleware('throttle:download')->name('profile.cv.download');
 });
 
-Route::middleware(['auth', 'verified'])->prefix('postulacion')->name('applications.')->group(function () {
-    Route::get('/', [ResearcherApplicationController::class, 'show'])->middleware('can:applications.view-own')->name('show');
-    Route::get('/crear', [ResearcherApplicationController::class, 'create'])->middleware('can:applications.create')->name('create');
-    Route::post('/', [ResearcherApplicationController::class, 'store'])->middleware('can:applications.create')->name('store');
-    Route::get('/editar', [ResearcherApplicationController::class, 'edit'])->middleware('can:applications.edit-own')->name('edit');
-    Route::put('/', [ResearcherApplicationController::class, 'update'])->middleware('can:applications.edit-own')->name('update');
-    Route::post('/enviar', [ResearcherApplicationController::class, 'submit'])->middleware('can:applications.submit')->name('submit');
-    Route::post('/retirar', [ResearcherApplicationController::class, 'withdraw'])->middleware('can:applications.withdraw')->name('withdraw');
-    Route::get('/certificacion', [ResearcherApplicationController::class, 'certificate'])
-        ->middleware(['role.researcher', 'throttle:download'])
-        ->name('certificate');
+Route::middleware(['auth','verified','role.researcher'])->prefix('membresia')->name('membership.')->group(function(){
+    Route::get('/',[MembershipController::class,'show'])->name('show');
+    Route::get('/certificacion',[MembershipController::class,'certificate'])->middleware('throttle:download')->name('certificate');
 });
 
-Route::middleware(['auth', 'verified', 'role.researcher', 'researcher.profile.complete', 'can:submissions.view-own'])
+Route::middleware(['auth', 'verified', 'role.researcher', 'can:submissions.view-own'])
     ->prefix('investigador/aportes')->name('researcher.submissions.')->group(function () {
         Route::get('/', [ResearcherSubmissionController::class, 'index'])->name('index');
         foreach (['event', 'bulletin', 'call'] as $type) {
@@ -113,7 +112,7 @@ Route::middleware(['auth', 'verified', 'role.researcher', 'researcher.profile.co
         }
     });
 
-Route::middleware(['auth','verified','role.researcher','researcher.profile.complete'])->prefix('investigador/publicaciones')->name('researcher.publications.')->group(function(){
+Route::middleware(['auth','verified','role.researcher'])->prefix('miembro/publicaciones')->name('researcher.publications.')->group(function(){
  Route::get('/',[ResearchPublicationController::class,'index'])->middleware('can:research-publications.view-own')->name('index');
  Route::get('/crear',[ResearchPublicationController::class,'create'])->middleware('can:research-publications.create')->name('create'); Route::post('/',[ResearchPublicationController::class,'store'])->middleware('can:research-publications.create')->name('store');
  Route::get('/{publication}',[ResearchPublicationController::class,'show'])->middleware('can:research-publications.view-own')->name('show'); Route::get('/{publication}/editar',[ResearchPublicationController::class,'edit'])->middleware('can:research-publications.edit-own')->name('edit'); Route::put('/{publication}',[ResearchPublicationController::class,'update'])->middleware('can:research-publications.edit-own')->name('update'); Route::delete('/{publication}',[ResearchPublicationController::class,'destroy'])->middleware('can:research-publications.delete-own')->name('destroy'); Route::post('/{publication}/enviar',[ResearchPublicationController::class,'submit'])->middleware(['can:research-publications.submit','throttle:submission'])->name('submit'); Route::get('/{publication}/pdf',[ResearchPublicationController::class,'pdf'])->middleware(['can:research-publications.download-own','throttle:download'])->name('pdf');
@@ -135,13 +134,11 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::patch('submissions/{type}/{id}/reject', [SubmissionReviewController::class, 'reject'])->middleware('can:submissions.reject')->name('submissions.reject');
     Route::patch('submissions/{type}/{id}/publish', [SubmissionReviewController::class, 'publish'])->middleware('can:submissions.publish')->name('submissions.publish');
     Route::patch('submissions/{type}/{id}/unpublish', [SubmissionReviewController::class, 'unpublish'])->middleware('can:submissions.publish')->name('submissions.unpublish');
-    Route::get('researcher-applications', [AdminResearcherApplicationController::class, 'index'])->middleware('can:applications.view')->name('researcher-applications.index');
-    Route::get('researcher-applications/{application}', [AdminResearcherApplicationController::class, 'show'])->middleware('can:applications.view')->name('researcher-applications.show');
-    Route::get('researcher-applications/{application}/curriculum', [AdminResearcherApplicationController::class, 'downloadCv'])->middleware(['can:applications.view', 'throttle:download'])->name('researcher-applications.cv');
-    Route::patch('researcher-applications/{application}/start-review', [AdminResearcherApplicationController::class, 'startReview'])->middleware('can:applications.review')->name('researcher-applications.start-review');
-    Route::patch('researcher-applications/{application}/observe', [AdminResearcherApplicationController::class, 'observe'])->middleware('can:applications.observe')->name('researcher-applications.observe');
-    Route::patch('researcher-applications/{application}/approve', [AdminResearcherApplicationController::class, 'approve'])->middleware('can:applications.approve')->name('researcher-applications.approve');
-    Route::patch('researcher-applications/{application}/reject', [AdminResearcherApplicationController::class, 'reject'])->middleware('can:applications.reject')->name('researcher-applications.reject');
+    Route::get('subscriptions',[AdminSubscriptionController::class,'index'])->middleware('can:subscriptions.view')->name('subscriptions.index');
+    Route::get('subscriptions/{subscription}',[AdminSubscriptionController::class,'show'])->middleware('can:subscriptions.view')->name('subscriptions.show');
+    Route::patch('subscriptions/{subscription}/review',[AdminSubscriptionController::class,'startReview'])->middleware('can:subscriptions.review')->name('subscriptions.review');
+    Route::patch('subscriptions/{subscription}/approve',[AdminSubscriptionController::class,'approve'])->middleware('can:subscriptions.approve')->name('subscriptions.approve');
+    Route::patch('subscriptions/{subscription}/reject',[AdminSubscriptionController::class,'reject'])->middleware('can:subscriptions.reject')->name('subscriptions.reject');
     Route::get('settings/mail', [SiteSettingController::class, 'edit'])->middleware('can:settings.view')->name('settings.mail.edit');
     Route::put('settings/mail', [SiteSettingController::class, 'update'])->middleware('can:settings.edit')->name('settings.mail.update');
     Route::post('settings/mail/test', [SiteSettingController::class, 'sendTest'])->middleware('can:settings.edit')->name('settings.mail.test');

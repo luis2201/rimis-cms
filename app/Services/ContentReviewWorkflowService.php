@@ -31,6 +31,6 @@ class ContentReviewWorkflowService
         try { $result->author?->notify(new ContentSubmissionStatusNotification($result,$this->typeLabel($result),$event,$notes)); } catch(Throwable $e) { Log::warning('No se pudo notificar el cambio editorial.',['type'=>$result::class,'id'=>$result->id,'error'=>$e->getMessage()]); }
         return $result;
     }
-    private function guard(Model $m, User $actor, string $permission): void { if(!$actor->can($permission) || $actor->hasRole('INVESTIGADOR') || !$m->isResearcherSubmission() || (int)$m->user_id===(int)$actor->id) abort(403); }
+    private function guard(Model $m, User $actor, string $permission): void { if(!$actor->can($permission) || $actor->isMember() || !$m->isResearcherSubmission() || (int)$m->user_id===(int)$actor->id) abort(403); }
     private function typeLabel(Model $m): string { return match(class_basename($m)){ 'Event'=>'Evento','Bulletin'=>'Boletín','ResearchPublication'=>'Investigación',default=>'Convocatoria' }; }
 }

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Bulletin;
 use App\Models\CallForProposal;
 use App\Models\ResearchPublication;
-use App\Models\ResearcherProfile;
+use App\Models\Subscription;
 use App\Models\Event;
 use App\Models\MediaFile;
 use App\Models\News;
@@ -57,7 +57,8 @@ class SeoController extends Controller
             'events' => Event::published()->latest('updated_at')->get(),
             'calls' => CallForProposal::published()->latest('updated_at')->get(),
             'researchPublications' => ResearchPublication::publiclyVisible()->latest('updated_at')->get(),
-            'researcherProfiles' => ResearcherProfile::publiclyVisible()->latest('updated_at')->get(),
+            'researcherProfiles' => Subscription::where('type','professional')->where('status','approved')->whereNotNull('public_slug')->latest('updated_at')->get(),
+            'institutionProfiles' => Subscription::where('type','institutional')->where('status','approved')->whereNotNull('public_slug')->latest('updated_at')->get(),
         ])
             ->header('Content-Type', 'application/xml');
     }

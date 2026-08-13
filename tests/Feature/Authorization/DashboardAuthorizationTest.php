@@ -65,7 +65,7 @@ class DashboardAuthorizationTest extends TestCase
             ->assertSee('todavía no perteneces');
     }
 
-    public function test_unverified_basic_user_is_redirected_to_verification(): void
+    public function test_unverified_non_member_can_use_basic_dashboard(): void
     {
         Role::create(['name' => 'USUARIO', 'guard_name' => 'web'])->givePermissionTo('dashboard.basic');
         $user = User::factory()->unverified()->create();
@@ -73,7 +73,7 @@ class DashboardAuthorizationTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('dashboard'))
-            ->assertRedirect(route('verification.notice'));
+            ->assertOk();
     }
 
     public function test_basic_user_cannot_access_admin_or_researcher_capabilities(): void

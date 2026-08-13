@@ -46,7 +46,7 @@
     @can('research-publications.view-own')
         <div class="card card-success card-outline"><div class="card-header"><h3 class="card-title">Mis publicaciones de investigación</h3></div><div class="card-body"><p><strong>{{ \App\Models\ResearchPublication::where('user_id',auth()->id())->count() }}</strong> publicaciones registradas.</p><a href="{{ route('researcher.publications.index') }}" class="btn btn-success">Gestionar publicaciones</a></div></div>
     @endcan
-    @php($publicProfile=Auth::user()->researcherProfile)
+    @php($publicProfile=Auth::user()->subscription)
     @if($publicProfile)
         <div class="card card-info card-outline"><div class="card-header"><h3 class="card-title">Mi perfil público</h3></div><div class="card-body"><p><strong>{{ $publicProfile->profile_public?'Visible':'Oculto por administración' }}</strong></p><p>{{ collect([$publicProfile->public_bio,$publicProfile->orcid,$publicProfile->research_line,$publicProfile->profile_photo_id])->filter()->count()*25 }}% de información pública complementaria completada.</p><a href="{{ route('profile.edit') }}" class="btn btn-primary">Editar perfil y privacidad</a>@if($publicProfile->canAppearInDirectory())<a href="{{ route('researchers.show',$publicProfile->public_slug) }}" class="btn btn-outline-info">Ver perfil público</a>@endif</div></div>
     @endif
@@ -55,7 +55,7 @@
         <h5><i class="fas fa-info-circle mr-1"></i> Bienvenido, {{ Auth::user()->name }}</h5>
         <p class="mb-0">Este espacio reunirá tus investigaciones, artículos enviados, eventos y notificaciones.</p>
     </div>
-    @if(Auth::user()->researcherApplication)
-        <div class="card card-success card-outline"><div class="card-header"><h3 class="card-title">Mi membresía RIMIS</h3></div><div class="card-body"><p>Consulta tu postulación aprobada y su historial.</p><a href="{{ route('applications.show') }}" class="btn btn-success">Ver membresía</a></div></div>
+    @if(Auth::user()->subscription)
+        <div class="card card-success card-outline"><div class="card-header"><h3 class="card-title">Mi membresía RIMIS</h3></div><div class="card-body"><p>Consulta tu suscripción aprobada.</p><a href="{{ route('membership.show') }}" class="btn btn-success">Ver membresía</a></div></div>
     @endif
 </x-app-layout>

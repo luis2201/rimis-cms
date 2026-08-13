@@ -1,0 +1,26 @@
+<x-guest-layout>
+<h1 class="h3 mb-3">Suscripción {{ $type==='professional'?'profesional':'institucional' }}</h1>
+<p class="text-muted">No se creará una cuenta hasta que la suscripción sea aprobada.</p>
+<form method="POST" action="{{ route('subscriptions.store',$type) }}">@csrf
+@if($type==='professional')
+<div class="row"><div class="col-md-6 form-group"><label>Nombres completos *</label><input name="first_names" class="form-control @error('first_names') is-invalid @enderror" value="{{ old('first_names') }}" required>@error('first_names')<span class="invalid-feedback">{{ $message }}</span>@enderror</div><div class="col-md-6 form-group"><label>Apellidos completos *</label><input name="last_names" class="form-control @error('last_names') is-invalid @enderror" value="{{ old('last_names') }}" required></div></div>
+<div class="row"><div class="col-md-6 form-group"><label>Correo electrónico *</label><input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}" required>@error('email')<span class="invalid-feedback">{{ $message }}</span>@enderror</div><div class="col-md-6 form-group"><label>Cédula *</label><input name="national_id" class="form-control @error('national_id') is-invalid @enderror" value="{{ old('national_id') }}" required></div></div>
+<div class="row"><div class="col-md-6 form-group"><label>Código ORCID</label><input name="orcid" class="form-control" value="{{ old('orcid') }}" placeholder="0000-0000-0000-0000"></div><div class="col-md-6 form-group"><label>Título de pregrado *</label><input name="undergraduate_title" class="form-control" value="{{ old('undergraduate_title') }}" required></div></div>
+<div class="form-group"><label>Títulos de posgrado</label><textarea name="postgraduate_titles" class="form-control">{{ old('postgraduate_titles') }}</textarea></div>
+<div class="form-group"><label>Áreas de investigación *</label><div class="row">@foreach($areas as $area)<div class="col-md-6"><label class="font-weight-normal"><input type="checkbox" name="research_areas[]" value="{{ $area }}" @checked(in_array($area,old('research_areas',[])))> {{ $area }}</label></div>@endforeach</div>@error('research_areas')<div class="text-danger small">{{ $message }}</div>@enderror</div>
+<div class="form-group" id="other-area"><label>Especifique otra área</label><input name="other_research_area" class="form-control" value="{{ old('other_research_area') }}"></div>
+<div class="form-group"><label>Comunidades científicas a las que pertenece</label><textarea name="scientific_communities" class="form-control">{{ old('scientific_communities') }}</textarea></div>
+<div class="form-group"><label>Actividad investigativa *</label><textarea name="research_activity" class="form-control" rows="4" required>{{ old('research_activity') }}</textarea></div>
+<div class="row"><div class="col-md-4 form-group"><label>País *</label><input name="country" class="form-control" value="{{ old('country') }}" required></div><div class="col-md-4 form-group"><label>Ciudad de residencia *</label><input name="city" class="form-control" value="{{ old('city') }}" required></div><div class="col-md-4 form-group"><label>Número de contacto *</label><input type="tel" name="contact_phone" class="form-control" value="{{ old('contact_phone') }}" required></div></div>
+@else
+<div class="form-group"><label>Nombre de la institución *</label><input name="institution_name" class="form-control" value="{{ old('institution_name') }}" required></div>
+<div class="row"><div class="col-md-6 form-group"><label>RUC *</label><input name="ruc" class="form-control" value="{{ old('ruc') }}" required></div><div class="col-md-6 form-group"><label>Nombre del rector *</label><input name="rector_name" class="form-control" value="{{ old('rector_name') }}" required></div></div>
+<div class="form-group"><label>Tipo de institución *</label><select name="institution_type" class="form-control" required><option value="">Seleccione</option>@foreach($institutionTypes as $item)<option @selected(old('institution_type')===$item)>{{ $item }}</option>@endforeach</select></div>
+<div class="form-group"><label>Especifique otro tipo</label><input name="other_institution_type" class="form-control" value="{{ old('other_institution_type') }}"></div>
+<div class="row"><div class="col-md-6 form-group"><label>País *</label><input name="country" class="form-control" value="{{ old('country') }}" required></div><div class="col-md-6 form-group"><label>Ciudad *</label><input name="city" class="form-control" value="{{ old('city') }}" required></div></div>
+<div class="form-group"><label>Correo electrónico *</label><input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}" required>@error('email')<span class="invalid-feedback">{{ $message }}</span>@enderror</div>
+<div class="row"><div class="col-md-6 form-group"><label>Teléfono principal</label><input type="tel" name="main_phone" class="form-control" value="{{ old('main_phone') }}"></div><div class="col-md-6 form-group"><label>Teléfono celular *</label><input type="tel" name="mobile_phone" class="form-control" value="{{ old('mobile_phone') }}" required></div></div>
+@endif
+<button class="btn btn-success btn-block">Enviar suscripción</button>
+</form>
+</x-guest-layout>

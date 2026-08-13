@@ -33,7 +33,7 @@
                     @auth
                         <a href="{{ route('dashboard') }}" class="home-button-primary">Acceder a mi panel <i class="fa-solid fa-arrow-right ml-2"></i></a>
                     @else
-                        <a href="{{ route('register') }}" class="home-button-primary">Formar parte de RIMIS <i class="fa-solid fa-arrow-right ml-2"></i></a>
+                        <a href="{{ route('subscriptions.index') }}" class="home-button-primary">Formar parte de RIMIS <i class="fa-solid fa-arrow-right ml-2"></i></a>
                         <a href="{{ route('news.index') }}" class="home-button-secondary">Explorar actualidad</a>
                     @endauth
                 </div>
