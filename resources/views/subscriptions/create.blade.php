@@ -49,7 +49,7 @@
                     @endforeach
                 </div>
                 @error('research_areas')<p class="subscription-error">{{ $message }}</p>@enderror
-                <div class="mt-5" x-show="otherArea" x-cloak>@include('subscriptions.partials.input', ['name'=>'other_research_area','label'=>'Especifique otra área','required'=>true])</div>
+                <div class="mt-5" x-show="otherArea" x-cloak>@include('subscriptions.partials.input', ['name'=>'other_research_area','label'=>'Especifique otra área','required'=>true,'requiredWhen'=>'otherArea'])</div>
             </section>
         @else
             <section class="subscription-section">
@@ -59,7 +59,7 @@
                     @include('subscriptions.partials.input', ['name'=>'ruc','label'=>'RUC','required'=>true,'inputmode'=>'numeric'])
                     @include('subscriptions.partials.input', ['name'=>'rector_name','label'=>'Nombre del rector','required'=>true])
                     <div class="subscription-field"><label for="institution_type">Tipo de institución <b>*</b></label><select id="institution_type" name="institution_type" required @change="otherInstitution = $event.target.value === 'Otra'" class="@error('institution_type') is-invalid @enderror"><option value="">Selecciona una opción</option>@foreach($institutionTypes as $item)<option value="{{ $item }}" @selected(old('institution_type') === $item)>{{ $item }}</option>@endforeach</select>@error('institution_type')<p class="subscription-error">{{ $message }}</p>@enderror</div>
-                    <div x-show="otherInstitution" x-cloak>@include('subscriptions.partials.input', ['name'=>'other_institution_type','label'=>'Especifique otro tipo','required'=>true])</div>
+                    <div x-show="otherInstitution" x-cloak>@include('subscriptions.partials.input', ['name'=>'other_institution_type','label'=>'Especifique otro tipo','required'=>true,'requiredWhen'=>'otherInstitution'])</div>
                 </div>
             </section>
 
