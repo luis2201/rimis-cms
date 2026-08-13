@@ -1,26 +1,83 @@
-<x-guest-layout>
-<h1 class="h3 mb-3">Suscripción {{ $type==='professional'?'profesional':'institucional' }}</h1>
-<p class="text-muted">No se creará una cuenta hasta que la suscripción sea aprobada.</p>
-<form method="POST" action="{{ route('subscriptions.store',$type) }}">@csrf
-@if($type==='professional')
-<div class="row"><div class="col-md-6 form-group"><label>Nombres completos *</label><input name="first_names" class="form-control @error('first_names') is-invalid @enderror" value="{{ old('first_names') }}" required>@error('first_names')<span class="invalid-feedback">{{ $message }}</span>@enderror</div><div class="col-md-6 form-group"><label>Apellidos completos *</label><input name="last_names" class="form-control @error('last_names') is-invalid @enderror" value="{{ old('last_names') }}" required></div></div>
-<div class="row"><div class="col-md-6 form-group"><label>Correo electrónico *</label><input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}" required>@error('email')<span class="invalid-feedback">{{ $message }}</span>@enderror</div><div class="col-md-6 form-group"><label>Cédula *</label><input name="national_id" class="form-control @error('national_id') is-invalid @enderror" value="{{ old('national_id') }}" required></div></div>
-<div class="row"><div class="col-md-6 form-group"><label>Código ORCID</label><input name="orcid" class="form-control" value="{{ old('orcid') }}" placeholder="0000-0000-0000-0000"></div><div class="col-md-6 form-group"><label>Título de pregrado *</label><input name="undergraduate_title" class="form-control" value="{{ old('undergraduate_title') }}" required></div></div>
-<div class="form-group"><label>Títulos de posgrado</label><textarea name="postgraduate_titles" class="form-control">{{ old('postgraduate_titles') }}</textarea></div>
-<div class="form-group"><label>Áreas de investigación *</label><div class="row">@foreach($areas as $area)<div class="col-md-6"><label class="font-weight-normal"><input type="checkbox" name="research_areas[]" value="{{ $area }}" @checked(in_array($area,old('research_areas',[])))> {{ $area }}</label></div>@endforeach</div>@error('research_areas')<div class="text-danger small">{{ $message }}</div>@enderror</div>
-<div class="form-group" id="other-area"><label>Especifique otra área</label><input name="other_research_area" class="form-control" value="{{ old('other_research_area') }}"></div>
-<div class="form-group"><label>Comunidades científicas a las que pertenece</label><textarea name="scientific_communities" class="form-control">{{ old('scientific_communities') }}</textarea></div>
-<div class="form-group"><label>Actividad investigativa *</label><textarea name="research_activity" class="form-control" rows="4" required>{{ old('research_activity') }}</textarea></div>
-<div class="row"><div class="col-md-4 form-group"><label>País *</label><input name="country" class="form-control" value="{{ old('country') }}" required></div><div class="col-md-4 form-group"><label>Ciudad de residencia *</label><input name="city" class="form-control" value="{{ old('city') }}" required></div><div class="col-md-4 form-group"><label>Número de contacto *</label><input type="tel" name="contact_phone" class="form-control" value="{{ old('contact_phone') }}" required></div></div>
-@else
-<div class="form-group"><label>Nombre de la institución *</label><input name="institution_name" class="form-control" value="{{ old('institution_name') }}" required></div>
-<div class="row"><div class="col-md-6 form-group"><label>RUC *</label><input name="ruc" class="form-control" value="{{ old('ruc') }}" required></div><div class="col-md-6 form-group"><label>Nombre del rector *</label><input name="rector_name" class="form-control" value="{{ old('rector_name') }}" required></div></div>
-<div class="form-group"><label>Tipo de institución *</label><select name="institution_type" class="form-control" required><option value="">Seleccione</option>@foreach($institutionTypes as $item)<option @selected(old('institution_type')===$item)>{{ $item }}</option>@endforeach</select></div>
-<div class="form-group"><label>Especifique otro tipo</label><input name="other_institution_type" class="form-control" value="{{ old('other_institution_type') }}"></div>
-<div class="row"><div class="col-md-6 form-group"><label>País *</label><input name="country" class="form-control" value="{{ old('country') }}" required></div><div class="col-md-6 form-group"><label>Ciudad *</label><input name="city" class="form-control" value="{{ old('city') }}" required></div></div>
-<div class="form-group"><label>Correo electrónico *</label><input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}" required>@error('email')<span class="invalid-feedback">{{ $message }}</span>@enderror</div>
-<div class="row"><div class="col-md-6 form-group"><label>Teléfono principal</label><input type="tel" name="main_phone" class="form-control" value="{{ old('main_phone') }}"></div><div class="col-md-6 form-group"><label>Teléfono celular *</label><input type="tel" name="mobile_phone" class="form-control" value="{{ old('mobile_phone') }}" required></div></div>
-@endif
-<button class="btn btn-success btn-block">Enviar suscripción</button>
-</form>
+<x-guest-layout wide>
+    @php($professional = $type === 'professional')
+    <div class="flex flex-col gap-6 border-b border-slate-200 pb-7 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <span class="subscription-kicker">Solicitud de membresía</span>
+            <h1 class="subscription-title mt-2">Suscripción {{ $professional ? 'profesional' : 'institucional' }}</h1>
+            <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-600">Completa los datos solicitados. La cuenta se creará únicamente cuando la suscripción sea aprobada.</p>
+        </div>
+        <div class="subscription-icon shrink-0"><i class="fa-solid {{ $professional ? 'fa-user-graduate' : 'fa-building-columns' }}"></i></div>
+    </div>
+
+    @if ($errors->any())
+        <div class="subscription-alert mt-6" role="alert"><i class="fa-solid fa-circle-exclamation"></i><div><strong>Revisa la información ingresada.</strong><p>Algunos campos están incompletos o ya se encuentran registrados.</p></div></div>
+    @endif
+
+    <form method="POST" action="{{ route('subscriptions.store', $type) }}" class="mt-8" x-data="{ otherArea: {{ in_array('Otra', old('research_areas', [])) ? 'true' : 'false' }}, otherInstitution: {{ old('institution_type') === 'Otra' ? 'true' : 'false' }} }">
+        @csrf
+
+        @if($professional)
+            <section class="subscription-section">
+                <div class="subscription-section-heading"><span>01</span><div><h2>Datos personales</h2><p>Información de identificación y contacto.</p></div></div>
+                <div class="subscription-grid">
+                    @include('subscriptions.partials.input', ['name'=>'first_names','label'=>'Nombres completos','required'=>true])
+                    @include('subscriptions.partials.input', ['name'=>'last_names','label'=>'Apellidos completos','required'=>true])
+                    @include('subscriptions.partials.input', ['name'=>'email','label'=>'Correo electrónico','type'=>'email','required'=>true])
+                    @include('subscriptions.partials.input', ['name'=>'national_id','label'=>'Cédula','required'=>true,'inputmode'=>'numeric'])
+                    @include('subscriptions.partials.input', ['name'=>'country','label'=>'País','required'=>true])
+                    @include('subscriptions.partials.input', ['name'=>'city','label'=>'Ciudad de residencia','required'=>true])
+                    @include('subscriptions.partials.input', ['name'=>'contact_phone','label'=>'Número de contacto','type'=>'tel','required'=>true,'inputmode'=>'tel'])
+                    @include('subscriptions.partials.input', ['name'=>'orcid','label'=>'Código ORCID','placeholder'=>'0000-0000-0000-0000'])
+                </div>
+            </section>
+
+            <section class="subscription-section mt-10">
+                <div class="subscription-section-heading"><span>02</span><div><h2>Trayectoria académica</h2><p>Formación y experiencia investigativa.</p></div></div>
+                <div class="subscription-grid">
+                    @include('subscriptions.partials.input', ['name'=>'undergraduate_title','label'=>'Título de pregrado','required'=>true])
+                    @include('subscriptions.partials.textarea', ['name'=>'postgraduate_titles','label'=>'Títulos de posgrado','placeholder'=>'Detalla tus títulos, uno por línea.'])
+                    <div class="md:col-span-2">@include('subscriptions.partials.textarea', ['name'=>'scientific_communities','label'=>'Comunidades científicas a las que pertenece'])</div>
+                    <div class="md:col-span-2">@include('subscriptions.partials.textarea', ['name'=>'research_activity','label'=>'Actividad investigativa','required'=>true,'rows'=>4])</div>
+                </div>
+            </section>
+
+            <section class="subscription-section mt-10">
+                <div class="subscription-section-heading"><span>03</span><div><h2>Áreas de investigación</h2><p>Selecciona todas las áreas relacionadas con tu trabajo.</p></div></div>
+                <div class="subscription-check-grid">
+                    @foreach($areas as $area)
+                        <label class="subscription-check"><input type="checkbox" name="research_areas[]" value="{{ $area }}" @checked(in_array($area, old('research_areas', []))) @change="if ($event.target.value === 'Otra') otherArea = $event.target.checked"><span><i class="fa-solid fa-check"></i></span>{{ $area }}</label>
+                    @endforeach
+                </div>
+                @error('research_areas')<p class="subscription-error">{{ $message }}</p>@enderror
+                <div class="mt-5" x-show="otherArea" x-cloak>@include('subscriptions.partials.input', ['name'=>'other_research_area','label'=>'Especifique otra área','required'=>true])</div>
+            </section>
+        @else
+            <section class="subscription-section">
+                <div class="subscription-section-heading"><span>01</span><div><h2>Datos de la institución</h2><p>Información legal y representación institucional.</p></div></div>
+                <div class="subscription-grid">
+                    <div class="md:col-span-2">@include('subscriptions.partials.input', ['name'=>'institution_name','label'=>'Nombre de la institución','required'=>true])</div>
+                    @include('subscriptions.partials.input', ['name'=>'ruc','label'=>'RUC','required'=>true,'inputmode'=>'numeric'])
+                    @include('subscriptions.partials.input', ['name'=>'rector_name','label'=>'Nombre del rector','required'=>true])
+                    <div class="subscription-field"><label for="institution_type">Tipo de institución <b>*</b></label><select id="institution_type" name="institution_type" required @change="otherInstitution = $event.target.value === 'Otra'" class="@error('institution_type') is-invalid @enderror"><option value="">Selecciona una opción</option>@foreach($institutionTypes as $item)<option value="{{ $item }}" @selected(old('institution_type') === $item)>{{ $item }}</option>@endforeach</select>@error('institution_type')<p class="subscription-error">{{ $message }}</p>@enderror</div>
+                    <div x-show="otherInstitution" x-cloak>@include('subscriptions.partials.input', ['name'=>'other_institution_type','label'=>'Especifique otro tipo','required'=>true])</div>
+                </div>
+            </section>
+
+            <section class="subscription-section mt-10">
+                <div class="subscription-section-heading"><span>02</span><div><h2>Ubicación y contacto</h2><p>Canales oficiales para comunicarnos con la institución.</p></div></div>
+                <div class="subscription-grid">
+                    @include('subscriptions.partials.input', ['name'=>'country','label'=>'País','required'=>true])
+                    @include('subscriptions.partials.input', ['name'=>'city','label'=>'Ciudad','required'=>true])
+                    <div class="md:col-span-2">@include('subscriptions.partials.input', ['name'=>'email','label'=>'Correo electrónico institucional','type'=>'email','required'=>true])</div>
+                    @include('subscriptions.partials.input', ['name'=>'main_phone','label'=>'Teléfono principal','type'=>'tel','inputmode'=>'tel'])
+                    @include('subscriptions.partials.input', ['name'=>'mobile_phone','label'=>'Teléfono celular','type'=>'tel','required'=>true,'inputmode'=>'tel'])
+                </div>
+            </section>
+        @endif
+
+        <div class="mt-10 flex flex-col-reverse gap-3 border-t border-slate-200 pt-7 sm:flex-row sm:items-center sm:justify-between">
+            <a href="{{ route('subscriptions.index') }}" class="subscription-back"><i class="fa-solid fa-arrow-left"></i> Volver</a>
+            <button class="subscription-submit">Enviar suscripción <i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </form>
 </x-guest-layout>

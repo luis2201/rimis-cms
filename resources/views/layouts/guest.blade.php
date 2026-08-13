@@ -18,7 +18,7 @@
         <div class="relative flex min-h-screen items-center justify-center overflow-hidden bg-[var(--rimis-charcoal)] px-4 py-10">
             <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(31,157,173,0.38),transparent_38%),radial-gradient(circle_at_bottom_left,rgba(178,47,56,0.25),transparent_34%)]"></div>
 
-            <div class="relative w-full max-w-md">
+            <div {{ $attributes->class(['relative w-full', 'max-w-5xl' => $attributes->has('wide'), 'max-w-md' => ! $attributes->has('wide')]) }}>
                 <a href="{{ url('/') }}" class="mx-auto block w-fit rounded-xl px-4 py-2 transition hover:bg-white/5" aria-label="Volver al inicio de RIMIS">
                     <img src="{{ asset('images/logo_rimis.png') }}" alt="RIMIS" class="h-20 w-auto object-contain">
                 </a>

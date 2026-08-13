@@ -9,6 +9,89 @@
     display: none !important;
 }
 
+.subscription-kicker {
+    color: var(--rimis-coral);
+    font-size: .7rem;
+    font-weight: 800;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+}
+
+.subscription-title {
+    color: var(--rimis-charcoal);
+    font-family: 'Libre Baskerville', Georgia, serif;
+    font-size: clamp(1.75rem, 4vw, 2.65rem);
+    font-weight: 700;
+    letter-spacing: -.035em;
+    line-height: 1.15;
+}
+
+.subscription-option {
+    position: relative;
+    display: flex;
+    min-height: 30rem;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid #dbe5e7;
+    border-radius: 1.25rem;
+    padding: 2rem;
+    background: #fff;
+    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+
+.subscription-option::before {
+    position: absolute;
+    inset: 0 0 auto;
+    height: .35rem;
+    background: var(--rimis-primary);
+    content: '';
+}
+
+.subscription-option-institutional::before { background: var(--rimis-coral); }
+.subscription-option:hover { transform: translateY(-5px); border-color: #b9d8dd; box-shadow: 0 22px 45px rgba(21, 29, 36, .12); }
+.subscription-option .subscription-number { position: absolute; top: 1.35rem; right: 1.5rem; color: #dbe5e7; font-size: 3rem; font-weight: 800; }
+.subscription-icon { display: inline-flex; width: 4rem; height: 4rem; align-items: center; justify-content: center; border-radius: 1rem; background: rgba(31, 157, 173, .12); color: var(--rimis-primary-dark); font-size: 1.5rem; }
+.subscription-option-institutional .subscription-icon { background: rgba(178, 47, 56, .1); color: var(--rimis-coral); }
+.subscription-option h2 { margin-top: 1.75rem; color: var(--rimis-charcoal); font-family: 'Libre Baskerville', Georgia, serif; font-size: 1.45rem; font-weight: 700; }
+.subscription-option > p { margin-top: .8rem; color: #64748b; line-height: 1.7; }
+.subscription-option ul { margin: 1.5rem 0 2rem; color: #334155; font-size: .9rem; line-height: 2.15; }
+.subscription-option li i { margin-right: .65rem; color: var(--rimis-primary); font-size: .75rem; }
+.subscription-option-institutional li i { color: var(--rimis-coral); }
+.subscription-action { display: inline-flex; min-height: 3.25rem; align-items: center; justify-content: space-between; margin-top: auto; padding: .8rem 1rem; border-radius: .75rem; background: var(--rimis-charcoal); color: #fff; font-size: .82rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; transition: .2s ease; }
+.subscription-action:hover { background: var(--rimis-primary-dark); color: #fff; }
+.subscription-option-institutional .subscription-action:hover { background: var(--rimis-coral-dark); }
+
+.subscription-section { border-radius: 1rem; background: #f8fafc; padding: 1.5rem; }
+.subscription-section-heading { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem; }
+.subscription-section-heading > span { display: flex; width: 2.5rem; height: 2.5rem; flex: 0 0 auto; align-items: center; justify-content: center; border-radius: 9999px; background: var(--rimis-charcoal); color: #fff; font-size: .72rem; font-weight: 800; }
+.subscription-section-heading h2 { color: var(--rimis-charcoal); font-family: 'Libre Baskerville', Georgia, serif; font-size: 1.15rem; font-weight: 700; }
+.subscription-section-heading p { margin-top: .2rem; color: #64748b; font-size: .82rem; }
+.subscription-grid { display: grid; gap: 1.25rem; }
+.subscription-field label { display: block; margin-bottom: .45rem; color: #334155; font-size: .8rem; font-weight: 700; }
+.subscription-field label b { color: var(--rimis-coral); }
+.subscription-field input, .subscription-field select, .subscription-field textarea { width: 100%; border: 1px solid #cbd5e1; border-radius: .65rem; background: #fff; color: #1e293b; font-size: .9rem; transition: border-color .2s ease, box-shadow .2s ease; }
+.subscription-field input, .subscription-field select { min-height: 3rem; }
+.subscription-field input:focus, .subscription-field select:focus, .subscription-field textarea:focus { border-color: var(--rimis-primary); box-shadow: 0 0 0 3px rgba(31, 157, 173, .14); outline: 0; }
+.subscription-field .is-invalid { border-color: var(--rimis-coral); }
+.subscription-error { margin-top: .4rem; color: var(--rimis-coral); font-size: .75rem; font-weight: 600; }
+.subscription-check-grid { display: grid; gap: .75rem; }
+.subscription-check { display: flex; cursor: pointer; align-items: center; gap: .75rem; border: 1px solid #dbe3e8; border-radius: .7rem; padding: .8rem .9rem; background: #fff; color: #334155; font-size: .85rem; transition: .2s ease; }
+.subscription-check:hover { border-color: var(--rimis-primary); }
+.subscription-check input { position: absolute; opacity: 0; }
+.subscription-check span { display: flex; width: 1.25rem; height: 1.25rem; flex: 0 0 auto; align-items: center; justify-content: center; border: 1px solid #94a3b8; border-radius: .3rem; color: transparent; font-size: .65rem; }
+.subscription-check input:checked + span { border-color: var(--rimis-primary); background: var(--rimis-primary); color: #fff; }
+.subscription-alert { display: flex; gap: .8rem; border: 1px solid rgba(178, 47, 56, .2); border-radius: .75rem; padding: 1rem; background: rgba(178, 47, 56, .06); color: var(--rimis-coral-dark); font-size: .85rem; }
+.subscription-alert p { margin-top: .15rem; color: #7f1d1d; }
+.subscription-submit { display: inline-flex; min-height: 3.2rem; align-items: center; justify-content: center; gap: .75rem; border-radius: .7rem; padding: .8rem 1.4rem; background: var(--rimis-primary-dark); color: #fff; font-size: .82rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; transition: .2s ease; }
+.subscription-submit:hover { background: var(--rimis-charcoal); transform: translateY(-1px); }
+.subscription-back { display: inline-flex; align-items: center; gap: .6rem; color: #64748b; font-size: .85rem; font-weight: 700; }
+.subscription-back:hover { color: var(--rimis-coral); }
+
+@media (min-width: 768px) {
+    .subscription-grid, .subscription-check-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .subscription-section { padding: 2rem; }
+}
+
 .editorial-serif,
 .editorial-display,
 .editorial-heading {
