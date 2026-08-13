@@ -22,7 +22,7 @@ class ResearcherSubmissionController extends Controller
 
     public function index(Request $request): View
     {
-        abort_unless($request->user()->hasRole('INVESTIGADOR'), 403);
+        abort_unless($request->user()->isMember(), 403);
         $items = collect([
             ...Event::where('user_id', $request->user()->id)->where('origin', Event::ORIGIN_RESEARCHER)->get()->map(fn ($m) => $this->item($m, 'event')),
             ...Bulletin::where('user_id', $request->user()->id)->where('origin', Bulletin::ORIGIN_RESEARCHER)->get()->map(fn ($m) => $this->item($m, 'bulletin')),

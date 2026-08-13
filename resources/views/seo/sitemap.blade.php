@@ -41,4 +41,8 @@
 @foreach($researcherProfiles as $profile)
     <url><loc>{{ route('researchers.show', $profile->public_slug) }}</loc><lastmod>{{ $profile->updated_at->toAtomString() }}</lastmod></url>
 @endforeach
+    <url><loc>{{ route('institutions.index') }}</loc><lastmod>{{ now()->toAtomString() }}</lastmod></url>
+@foreach($institutionProfiles as $profile)
+    <url><loc>{{ route('institutions.show', $profile->public_slug) }}</loc><lastmod>{{ $profile->updated_at->toAtomString() }}</lastmod></url>
+@endforeach
 </urlset>

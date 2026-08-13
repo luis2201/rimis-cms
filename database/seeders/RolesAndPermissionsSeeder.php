@@ -133,6 +133,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'research-publications.view-own','research-publications.create','research-publications.edit-own','research-publications.delete-own','research-publications.submit','research-publications.download-own',
             'research-publications.view','research-publications.review','research-publications.edit','research-publications.publish',
             'researcher-profile.manage-privacy','researchers.manage-visibility',
+            'subscriptions.view','subscriptions.review','subscriptions.approve','subscriptions.reject',
         ];
 
         foreach ($permissions as $permission) {
@@ -161,6 +162,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'name' => 'USUARIO',
             'guard_name' => 'web',
         ]);
+
+        $institutional = Role::firstOrCreate(['name' => 'INSTITUCIONAL', 'guard_name' => 'web']);
 
         $admin->syncPermissions(Permission::all());
 
@@ -247,6 +250,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'submissions.publish',
             'research-publications.view','research-publications.review','research-publications.edit','research-publications.publish',
             'researchers.manage-visibility',
+            'subscriptions.view','subscriptions.review','subscriptions.approve','subscriptions.reject',
         ]);
 
         $researcher->syncPermissions([
@@ -272,6 +276,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'research-publications.view-own','research-publications.create','research-publications.edit-own','research-publications.delete-own','research-publications.submit','research-publications.download-own',
             'researcher-profile.manage-privacy',
         ]);
+
+        $institutional->syncPermissions($researcher->permissions);
 
         $user->syncPermissions([
             'dashboard.basic',

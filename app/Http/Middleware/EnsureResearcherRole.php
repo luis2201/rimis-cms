@@ -6,7 +6,7 @@ class EnsureResearcherRole
 {
     public function handle(Request $request, Closure $next)
     {
-        abort_unless($request->user()?->hasRole('INVESTIGADOR'), 403);
+        abort_unless($request->user()?->isMember(), 403);
         return $next($request);
     }
 }

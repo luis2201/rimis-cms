@@ -29,7 +29,7 @@ class ProfileTest extends TestCase
         Notification::fake();
         $this->seed(RolesAndPermissionsSeeder::class);
         $user = User::factory()->create();
-        $user->assignRole('USUARIO');
+        $user->assignRole('INVESTIGADOR');
 
         $response = $this
             ->actingAs($user)

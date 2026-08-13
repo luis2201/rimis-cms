@@ -25,6 +25,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
+        'must_change_password',
         'is_active',
         'deactivated_at',
     ];
@@ -48,6 +49,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_verified_at' => 'datetime',
         'is_active' => 'boolean',
         'deactivated_at' => 'datetime',
+        'must_change_password' => 'boolean',
     ];
 
     public function researcherProfile(): HasOne
@@ -69,6 +71,10 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(ResearcherApplicationHistory::class, 'changed_by');
     }
+
+    public function subscription(): HasOne { return $this->hasOne(Subscription::class); }
+    public function isMember(): bool { return $this->hasAnyRole(['INVESTIGADOR', 'INSTITUCIONAL']); }
+    public function membershipProfile(): ?Subscription { return $this->subscription; }
     public function researchPublications(): HasMany { return $this->hasMany(ResearchPublication::class); }
     public function researchPublicationAuthorships(): HasMany { return $this->hasMany(ResearchPublicationAuthor::class); }
     public function reviewedResearchPublications(): HasMany { return $this->hasMany(ResearchPublication::class, 'reviewed_by'); }

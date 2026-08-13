@@ -23,7 +23,7 @@ class ProfileController extends Controller
     public function edit(Request $request): View
     {
         return view('profile.edit', [
-            'user' => $request->user()->load('researcherProfile'),
+            'user' => $request->user()->load('subscription'),
             'salutations' => ResearcherProfile::SALUTATIONS,
             'countries' => ResearcherProfile::COUNTRIES,
             'researchAreas' => ResearcherProfile::RESEARCH_AREAS,
@@ -81,7 +81,7 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
-        if ($emailChanged && $request->user()->hasAnyRole(['USUARIO', 'INVESTIGADOR'])) {
+        if ($emailChanged && $request->user()->isMember()) {
             $request->user()->sendEmailVerificationNotification();
 
             return Redirect::route('verification.notice')->with('status', 'verification-link-sent');

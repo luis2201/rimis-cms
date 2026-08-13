@@ -1,0 +1,1 @@
+<x-guest-layout><div class="text-center"><i class="fas fa-check-circle text-success fa-3x mb-3"></i><h1 class="h3">Suscripción enviada</h1><p>Recibirás por correo las novedades de la revisión.</p><a href="{{ route('home') }}" class="btn btn-primary">Volver al inicio</a></div></x-guest-layout>
