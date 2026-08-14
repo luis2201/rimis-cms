@@ -33,7 +33,7 @@
                     @auth
                         <a href="{{ route('dashboard') }}" class="home-button-primary">Acceder a mi panel <i class="fa-solid fa-arrow-right ml-2"></i></a>
                     @else
-                        <a href="{{ route('subscriptions.index') }}" class="home-button-primary">Formar parte de RIMIS <i class="fa-solid fa-arrow-right ml-2"></i></a>
+                        <a href="{{ route('subscriptions.index') }}" class="home-button-primary">Formulario de Suscripción <i class="fa-solid fa-arrow-right ml-2"></i></a>
                         <a href="{{ route('news.index') }}" class="home-button-secondary">Explorar actualidad</a>
                     @endauth
                 </div>
@@ -129,7 +129,7 @@
         <div class="mx-auto w-full max-w-7xl px-5 py-16 sm:px-8 lg:py-20">
             <div class="mx-auto max-w-2xl text-center">
                 <span class="editorial-kicker text-[var(--rimis-coral)]">Colaboración institucional</span>
-                <h2 class="editorial-serif mt-3 text-3xl font-bold tracking-[-.035em] text-slate-900 sm:text-4xl">Instituciones aliadas</h2>
+                <h2 class="editorial-serif mt-3 text-3xl font-bold tracking-[-.035em] text-slate-900 sm:text-4xl">Comunidades Científicas</h2>
                 <p class="mt-4 text-base leading-7 text-slate-600">Organizaciones que colaboran para fortalecer la investigación, la divulgación científica y su impacto en la sociedad.</p>
             </div>
             <div class="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-4">
