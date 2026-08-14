@@ -71,6 +71,8 @@
 .subscription-field label b { color: var(--rimis-coral); }
 .subscription-field input, .subscription-field select, .subscription-field textarea { width: 100%; border: 1px solid #cbd5e1; border-radius: .65rem; background: #fff; color: #1e293b; font-size: .9rem; transition: border-color .2s ease, box-shadow .2s ease; }
 .subscription-field input, .subscription-field select { min-height: 3rem; }
+.subscription-field input[type="file"] { padding: .55rem; cursor: pointer; }
+.subscription-field input[type="file"]::file-selector-button { margin-right: .8rem; border: 0; border-radius: .45rem; padding: .55rem .75rem; background: var(--rimis-primary-dark); color: #fff; font-size: .75rem; font-weight: 700; cursor: pointer; }
 .subscription-field input:focus, .subscription-field select:focus, .subscription-field textarea:focus { border-color: var(--rimis-primary); box-shadow: 0 0 0 3px rgba(31, 157, 173, .14); outline: 0; }
 .subscription-field .is-invalid { border-color: var(--rimis-coral); }
 .subscription-error { margin-top: .4rem; color: var(--rimis-coral); font-size: .75rem; font-weight: 600; }

@@ -23,7 +23,7 @@ class Subscription extends Model
     public const INSTITUTION_TYPES = ['Pública', 'Privada', 'ONG', 'Otra'];
 
     protected $guarded = [];
-    protected $casts = ['research_areas'=>'array','submitted_at'=>'datetime','review_started_at'=>'datetime','reviewed_at'=>'datetime'];
+    protected $casts = ['research_areas'=>'array','foundation_year'=>'integer','submitted_at'=>'datetime','review_started_at'=>'datetime','reviewed_at'=>'datetime'];
 
     public function user(): BelongsTo { return $this->belongsTo(User::class); }
     public function reviewer(): BelongsTo { return $this->belongsTo(User::class, 'reviewed_by'); }

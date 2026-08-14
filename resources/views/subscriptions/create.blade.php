@@ -13,7 +13,7 @@
         <div class="subscription-alert mt-6" role="alert"><i class="fa-solid fa-circle-exclamation"></i><div><strong>Revisa la información ingresada.</strong><p>Algunos campos están incompletos o ya se encuentran registrados.</p></div></div>
     @endif
 
-    <form method="POST" action="{{ route('subscriptions.store', $type) }}" class="mt-8" x-data="{ otherArea: {{ in_array('Otra', old('research_areas', [])) ? 'true' : 'false' }}, otherInstitution: {{ old('institution_type') === 'Otra' ? 'true' : 'false' }} }">
+    <form method="POST" action="{{ route('subscriptions.store', $type) }}" enctype="multipart/form-data" class="mt-8" x-data="{ otherArea: {{ in_array('Otra', old('research_areas', [])) ? 'true' : 'false' }}, otherInstitution: {{ old('institution_type') === 'Otra' ? 'true' : 'false' }} }">
         @csrf
 
         @if($professional)
@@ -37,7 +37,10 @@
                     @include('subscriptions.partials.input', ['name'=>'undergraduate_title','label'=>'Título de pregrado','required'=>true])
                     @include('subscriptions.partials.textarea', ['name'=>'postgraduate_titles','label'=>'Títulos de posgrado','placeholder'=>'Detalla tus títulos, uno por línea.'])
                     <div class="md:col-span-2">@include('subscriptions.partials.textarea', ['name'=>'scientific_communities','label'=>'Comunidades científicas a las que pertenece'])</div>
+                    <div class="md:col-span-2">@include('subscriptions.partials.textarea', ['name'=>'teaching_functions','label'=>'Funciones de docencia que desempeña actualmente','required'=>true,'rows'=>4])</div>
+                    <div class="md:col-span-2">@include('subscriptions.partials.textarea', ['name'=>'current_research_functions','label'=>'Funciones de investigación que desempeña actualmente','required'=>true,'rows'=>4])</div>
                     <div class="md:col-span-2">@include('subscriptions.partials.textarea', ['name'=>'research_activity','label'=>'Actividad investigativa','required'=>true,'rows'=>4])</div>
+                    <div class="md:col-span-2">@include('subscriptions.partials.file', ['name'=>'personal_photo','label'=>'Foto personal actualizada','required'=>true,'help'=>'Formato JPG, PNG o WebP. Máximo 5 MB.'])</div>
                 </div>
             </section>
 
@@ -56,15 +59,25 @@
                 <div class="subscription-section-heading"><span>01</span><div><h2>Datos de la institución</h2><p>Información legal y representación institucional.</p></div></div>
                 <div class="subscription-grid">
                     <div class="md:col-span-2">@include('subscriptions.partials.input', ['name'=>'institution_name','label'=>'Nombre de la institución','required'=>true])</div>
-                    @include('subscriptions.partials.input', ['name'=>'ruc','label'=>'RUC','required'=>true,'inputmode'=>'numeric'])
-                    @include('subscriptions.partials.input', ['name'=>'rector_name','label'=>'Nombre del rector','required'=>true])
+                    @include('subscriptions.partials.input', ['name'=>'principal_authority_name','label'=>'Nombre de la autoridad principal','required'=>true])
+                    @include('subscriptions.partials.input', ['name'=>'foundation_year','label'=>'Año de creación de la institución','type'=>'number','required'=>true,'inputmode'=>'numeric'])
+                    <div class="md:col-span-2">@include('subscriptions.partials.file', ['name'=>'institution_logo','label'=>'Logotipo de la institución','required'=>true,'help'=>'Formato JPG, PNG o WebP. Máximo 5 MB.'])</div>
                     <div class="subscription-field"><label for="institution_type">Tipo de institución <b>*</b></label><select id="institution_type" name="institution_type" required @change="otherInstitution = $event.target.value === 'Otra'" class="@error('institution_type') is-invalid @enderror"><option value="">Selecciona una opción</option>@foreach($institutionTypes as $item)<option value="{{ $item }}" @selected(old('institution_type') === $item)>{{ $item }}</option>@endforeach</select>@error('institution_type')<p class="subscription-error">{{ $message }}</p>@enderror</div>
                     <div x-show="otherInstitution" x-cloak>@include('subscriptions.partials.input', ['name'=>'other_institution_type','label'=>'Especifique otro tipo','required'=>true,'requiredWhen'=>'otherInstitution'])</div>
                 </div>
             </section>
 
             <section class="subscription-section mt-10">
-                <div class="subscription-section-heading"><span>02</span><div><h2>Ubicación y contacto</h2><p>Canales oficiales para comunicarnos con la institución.</p></div></div>
+                <div class="subscription-section-heading"><span>02</span><div><h2>Datos del solicitante</h2><p>Persona responsable de gestionar esta suscripción institucional.</p></div></div>
+                <div class="subscription-grid">
+                    @include('subscriptions.partials.input', ['name'=>'requester_name','label'=>'Nombre de quien solicita la suscripción','required'=>true])
+                    @include('subscriptions.partials.input', ['name'=>'requester_position','label'=>'Función que cumple en la institución','required'=>true])
+                    <div class="md:col-span-2">@include('subscriptions.partials.input', ['name'=>'requester_email','label'=>'Correo electrónico del solicitante','type'=>'email','required'=>true])</div>
+                </div>
+            </section>
+
+            <section class="subscription-section mt-10">
+                <div class="subscription-section-heading"><span>03</span><div><h2>Ubicación y contacto</h2><p>Canales oficiales para comunicarnos con la institución.</p></div></div>
                 <div class="subscription-grid">
                     @include('subscriptions.partials.input', ['name'=>'country','label'=>'País','required'=>true])
                     @include('subscriptions.partials.input', ['name'=>'city','label'=>'Ciudad','required'=>true])
