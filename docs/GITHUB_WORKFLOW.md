@@ -180,4 +180,3 @@ git push origin --delete agent/descripcion-del-cambio
 ```
 
 La eliminación debe hacerse solamente después de confirmar que la PR fue fusionada y que no quedan cambios pendientes en la rama.
-
