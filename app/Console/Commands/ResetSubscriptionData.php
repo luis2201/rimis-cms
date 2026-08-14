@@ -12,6 +12,7 @@ class ResetSubscriptionData extends Command
         if(!$this->option('force')&&!$this->confirm('¿Eliminar todas las suscripciones y usuarios no administrativos?'))return self::FAILURE;
         $keepers=User::role(['ADMINISTRADOR','WEBMASTER'])->pluck('id');$remove=User::whereNotIn('id',$keepers)->pluck('id');
         $paths=DB::table('researcher_profiles')->whereIn('user_id',$remove)->whereNotNull('cv_path')->pluck('cv_path');
+        $subscriptionImages=DB::table('subscriptions')->get(['personal_photo_path','institution_logo_path'])->flatMap(fn($row)=>[$row->personal_photo_path,$row->institution_logo_path])->filter();
         DB::transaction(function()use($remove){
             DB::table('subscriptions')->delete();
             if($remove->isEmpty())return;
@@ -23,6 +24,7 @@ class ResetSubscriptionData extends Command
             User::whereIn('id',$remove)->delete();
         });
         foreach($paths as $path)Storage::disk('local')->delete($path);
+        foreach($subscriptionImages as $path)Storage::disk('public')->delete($path);
         $this->info("Reinicio completado. Usuarios conservados: {$keepers->count()}; eliminados: {$remove->count()}; suscripciones: 0.");return self::SUCCESS;
     }
 }
