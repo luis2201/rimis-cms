@@ -44,6 +44,6 @@
 
     <p class="mt-6 text-center text-sm text-slate-500">
         ¿Aún no tienes una cuenta?
-        <a href="{{ route('subscriptions.index') }}" class="font-bold text-[var(--rimis-primary-dark)] hover:underline">Solicita una suscripción</a>
+        <a href="{{ route('subscriptions.index') }}" class="font-bold text-[var(--rimis-primary-dark)] hover:underline">Formulario de Suscripción</a>
     </p>
 </x-guest-layout>
