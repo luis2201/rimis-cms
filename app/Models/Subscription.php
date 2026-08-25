@@ -32,6 +32,6 @@ class Subscription extends Model
     public function isInstitutional(): bool { return $this->type === self::TYPE_INSTITUTIONAL; }
     public function isApproved(): bool { return $this->status === self::STATUS_APPROVED; }
     public function displayName(): string { return $this->isProfessional() ? trim($this->first_names.' '.$this->last_names) : $this->institution_name; }
-    public function publicationInstitution(): string { return $this->isInstitutional() ? $this->institution_name : ''; }
+    public function publicationInstitution(): string { return $this->isInstitutional() ? $this->institution_name : (string) $this->affiliated_institution; }
     public function primaryResearchArea(): ?string { return $this->research_areas[0] ?? null; }
 }

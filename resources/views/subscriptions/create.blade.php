@@ -35,6 +35,7 @@
                 <div class="subscription-section-heading"><span>02</span><div><h2>Trayectoria académica</h2><p>Formación y experiencia investigativa.</p></div></div>
                 <div class="subscription-grid">
                     @include('subscriptions.partials.input', ['name'=>'undergraduate_title','label'=>'Título de pregrado','required'=>true])
+                    @include('subscriptions.partials.input', ['name'=>'affiliated_institution','label'=>'Institución afiliada','required'=>true,'placeholder'=>'Nombre completo de la institución'])
                     @include('subscriptions.partials.textarea', ['name'=>'postgraduate_titles','label'=>'Títulos de posgrado','placeholder'=>'Detalla tus títulos, uno por línea.'])
                     <div class="md:col-span-2">@include('subscriptions.partials.textarea', ['name'=>'scientific_communities','label'=>'Comunidades científicas a las que pertenece'])</div>
                     <div class="md:col-span-2">@include('subscriptions.partials.textarea', ['name'=>'teaching_functions','label'=>'Funciones de docencia que desempeña actualmente','required'=>true,'rows'=>4])</div>

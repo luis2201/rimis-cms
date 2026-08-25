@@ -4,6 +4,7 @@ namespace Tests\Feature\Authorization;
 
 use App\Models\News;
 use App\Models\NewsCategory;
+use App\Models\MediaFile;
 use App\Models\Page;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -215,6 +216,45 @@ class PageAuthorizationTest extends TestCase
             ->assertSee('Preguntas frecuentes')
             ->assertSee('¿Cómo participar?')
             ->assertDontSee('Bloque oculto');
+    }
+
+    public function test_image_card_block_stores_and_renders_image_title_and_text(): void
+    {
+        $administrator = $this->userWithRole('ADMINISTRADOR');
+        $page = $this->draftPage($administrator);
+        $image = MediaFile::create([
+            'user_id' => $administrator->id,
+            'name' => 'card-image',
+            'original_name' => 'card-image.jpg',
+            'file_path' => 'media/card-image.jpg',
+            'disk' => 'public',
+            'file_type' => 'image',
+            'mime_type' => 'image/jpeg',
+            'size' => 100,
+            'alt_text' => 'Imagen de la tarjeta',
+            'status' => true,
+        ]);
+
+        $this->actingAs($administrator)->post(route('admin.pages.blocks.store', $page), [
+            'type' => 'image_card',
+            'name' => 'Tarjeta destacada',
+            'title' => 'Conocimiento que conecta',
+            'content' => '<p>Texto visible de la tarjeta.</p><script>alert(1)</script>',
+            'image_id' => $image->id,
+            'is_active' => true,
+        ])->assertRedirect();
+
+        $block = $page->blocks()->where('type', 'image_card')->firstOrFail();
+        $this->assertSame($image->id, $block->data['image_id']);
+        $this->assertStringNotContainsString('<script>', $block->data['content']);
+        $page->publish();
+
+        $this->get(route('pages.show', $page->slug))
+            ->assertOk()
+            ->assertSee('Conocimiento que conecta')
+            ->assertSee('Texto visible de la tarjeta')
+            ->assertSee('/storage/media/card-image.jpg', false)
+            ->assertDontSee('<script>', false);
     }
 
     public function test_dynamic_list_block_can_render_recent_news_from_a_category(): void

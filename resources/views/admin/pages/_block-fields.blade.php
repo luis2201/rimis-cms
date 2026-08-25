@@ -16,20 +16,20 @@
     <input name="name" class="form-control" value="{{ $block->name ?? '' }}" maxlength="120" placeholder="Solo visible en administración">
 </div>
 
-<div class="page-block-field" data-block-types="hero,text,text_image,gallery,cards,video,buttons,faq,dynamic_list">
+<div class="page-block-field" data-block-types="hero,text,text_image,gallery,cards,image_card,video,buttons,faq,dynamic_list">
     <div class="form-group"><label>Título</label><input name="title" class="form-control" value="{{ $data['title'] ?? '' }}" maxlength="255"></div>
 </div>
 <div class="page-block-field" data-block-types="hero">
     <div class="form-group"><label>Subtítulo</label><textarea name="subtitle" rows="2" class="form-control" maxlength="500">{{ $data['subtitle'] ?? '' }}</textarea></div>
 </div>
-<div class="page-block-field" data-block-types="text,text_image,html">
+<div class="page-block-field" data-block-types="text,text_image,image_card,html">
     <div class="form-group">
         <label>{{ ($block->type ?? '') === 'html' ? 'HTML personalizado' : 'Contenido' }}</label>
         <textarea name="content" rows="7" class="form-control" placeholder="<p>Contenido del bloque...</p>">{{ $data['content'] ?? '' }}</textarea>
         <small class="text-muted">Admite HTML seguro; scripts y atributos inseguros serán eliminados.</small>
     </div>
 </div>
-<div class="page-block-field" data-block-types="hero,image,text_image">
+<div class="page-block-field" data-block-types="hero,image,text_image,image_card">
     <div class="form-group">
         <label>Imagen de la biblioteca</label>
         <select name="image_id" class="form-control">
