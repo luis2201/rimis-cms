@@ -1,16 +1,53 @@
 <?php
+
 namespace App\Http\Controllers;
+
+use App\Models\ResearcherProfile;
 use App\Models\Subscription;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+
 class PublicResearcherController extends Controller
 {
-    public function index(Request $r):View
+    public function index(Request $request): View
     {
-        $query=Subscription::where('type',Subscription::TYPE_PROFESSIONAL)->where('status',Subscription::STATUS_APPROVED)->whereHas('user',fn($q)=>$q->where('is_active',true));
-        $profiles=$query->when($r->filled('search'),fn($q)=>$q->where(fn($x)=>$x->where('first_names','like','%'.$r->search.'%')->orWhere('last_names','like','%'.$r->search.'%')->orWhere('undergraduate_title','like','%'.$r->search.'%')))->when($r->filled('country'),fn($q)=>$q->where('country',$r->country))->when($r->filled('research_area'),fn($q)=>$q->whereJsonContains('research_areas',$r->research_area))->orderBy('last_names')->paginate(12)->withQueryString();
-        $filters=['countries'=>Subscription::where('type','professional')->where('status','approved')->distinct()->orderBy('country')->pluck('country'),'areas'=>collect(\App\Models\ResearcherProfile::RESEARCH_AREAS)];
-        return view('researchers.index',compact('profiles','filters'));
+        $approved = fn () => Subscription::query()
+            ->where('type', Subscription::TYPE_PROFESSIONAL)
+            ->where('status', Subscription::STATUS_APPROVED)
+            ->whereHas('user', fn ($query) => $query->where('is_active', true));
+
+        $profiles = $approved()
+            ->when($request->filled('search'), fn ($query) => $query->where(function ($nested) use ($request) {
+                $search = '%'.$request->string('search').'%';
+                $nested->where('first_names', 'like', $search)
+                    ->orWhere('last_names', 'like', $search)
+                    ->orWhere('undergraduate_title', 'like', $search);
+            }))
+            ->when($request->filled('institution'), fn ($query) => $query->where('affiliated_institution', $request->string('institution')->toString()))
+            ->when($request->filled('country'), fn ($query) => $query->where('country', $request->string('country')->toString()))
+            ->when($request->filled('research_area'), fn ($query) => $query->whereJsonContains('research_areas', $request->string('research_area')->toString()))
+            ->orderBy('last_names')
+            ->paginate(12)
+            ->withQueryString();
+
+        $filters = [
+            'institutions' => $approved()->whereNotNull('affiliated_institution')->where('affiliated_institution', '!=', '')->distinct()->orderBy('affiliated_institution')->pluck('affiliated_institution'),
+            'countries' => $approved()->distinct()->orderBy('country')->pluck('country'),
+            'areas' => collect(ResearcherProfile::RESEARCH_AREAS),
+        ];
+
+        return view('researchers.index', compact('profiles', 'filters'));
     }
-    public function show(string $slug):View{$profile=Subscription::where('type','professional')->where('status','approved')->where('public_slug',$slug)->whereHas('user',fn($q)=>$q->where('is_active',true))->with('user.researchPublications')->firstOrFail();return view('researchers.show',compact('profile'));}
+
+    public function show(string $slug): View
+    {
+        $profile = Subscription::where('type', Subscription::TYPE_PROFESSIONAL)
+            ->where('status', Subscription::STATUS_APPROVED)
+            ->where('public_slug', $slug)
+            ->whereHas('user', fn ($query) => $query->where('is_active', true))
+            ->with('user.researchPublications')
+            ->firstOrFail();
+
+        return view('researchers.show', compact('profile'));
+    }
 }

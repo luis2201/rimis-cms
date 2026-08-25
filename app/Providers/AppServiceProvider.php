@@ -48,6 +48,8 @@ class AppServiceProvider extends ServiceProvider
             'research-publications.show',
             'researchers.index',
             'researchers.show',
+            'institutions.index',
+            'institutions.show',
         ], function ($view) {
             $publicMenus = Schema::hasTable('menus')
                 ? Menu::where('is_active', true)->with('rootItems')->get()->keyBy('location')

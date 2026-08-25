@@ -14,6 +14,7 @@ class PageBlock extends Model
         'text_image' => ['label' => 'Texto + Imagen', 'icon' => 'fa-solid fa-table-columns'],
         'gallery' => ['label' => 'Galería', 'icon' => 'fa-regular fa-images'],
         'cards' => ['label' => 'Cards', 'icon' => 'fa-solid fa-grip'],
+        'image_card' => ['label' => 'Card con imagen', 'icon' => 'fa-regular fa-address-card'],
         'video' => ['label' => 'Video', 'icon' => 'fa-solid fa-circle-play'],
         'buttons' => ['label' => 'Botones', 'icon' => 'fa-solid fa-arrow-pointer'],
         'faq' => ['label' => 'FAQ', 'icon' => 'fa-regular fa-circle-question'],
