@@ -83,6 +83,39 @@ class SubscriptionWorkflowTest extends TestCase
         $this->get(route('institutions.index', ['country'=>'Ecuador', 'institution_type'=>'Pública']))->assertOk()->assertSee('Instituto Demo');
     }
 
+    public function test_only_administrator_can_edit_subscription_data_and_approved_user_is_synchronized(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('ADMINISTRADOR');
+        $webmaster = User::factory()->create();
+        $webmaster->assignRole('WEBMASTER');
+        $this->post(route('subscriptions.store', 'professional'), $this->professional());
+        $subscription = Subscription::firstOrFail();
+        $originalPhoto = $subscription->personal_photo_path;
+
+        $this->actingAs($webmaster)->get(route('admin.subscriptions.edit', $subscription))->assertForbidden();
+        $this->actingAs($admin)->get(route('admin.subscriptions.edit', $subscription))->assertOk()->assertSee('Editar suscripción');
+        $this->actingAs($admin)->patch(route('admin.subscriptions.review', $subscription));
+        $this->actingAs($admin)->patch(route('admin.subscriptions.approve', $subscription));
+
+        $data = $this->professional();
+        unset($data['personal_photo']);
+        $data['first_names'] = 'Ana Editada';
+        $data['email'] = 'ana.editada@rimis.test';
+        $this->actingAs($admin)->put(route('admin.subscriptions.update', $subscription), $data)
+            ->assertRedirect(route('admin.subscriptions.show', $subscription));
+
+        $subscription->refresh();
+        $this->assertSame('approved', $subscription->status);
+        $this->assertSame('Ana Editada', $subscription->first_names);
+        $this->assertSame($originalPhoto, $subscription->personal_photo_path);
+        $this->assertSame('ana.editada@rimis.test', $subscription->user->email);
+        $this->assertSame($subscription->displayName(), $subscription->user->name);
+        $this->assertTrue($subscription->user->hasVerifiedEmail());
+        Storage::disk('public')->assertExists($originalPhoto);
+        $this->assertDatabaseHas('subscription_histories', ['subscription_id'=>$subscription->id, 'previous_status'=>'approved', 'new_status'=>'approved']);
+    }
+
     private function professional(): array
     {
         return ['first_names'=>'Ana María', 'last_names'=>'Pérez López', 'email'=>'ana@rimis.test', 'national_id'=>'1300000001', 'orcid'=>'0000-0000-0000-000X', 'undergraduate_title'=>'Ingeniera', 'affiliated_institution'=>'Universidad Demo', 'research_areas'=>['Ingeniería y tecnología', 'Otra'], 'other_research_area'=>'Robótica', 'teaching_functions'=>'Docencia universitaria en sistemas.', 'current_research_functions'=>'Dirección de proyectos tecnológicos.', 'research_activity'=>'Investigación aplicada en sistemas autónomos.', 'personal_photo'=>UploadedFile::fake()->image('foto.jpg', 400, 400), 'country'=>'Ecuador', 'city'=>'Portoviejo', 'contact_phone'=>'0990000001'];

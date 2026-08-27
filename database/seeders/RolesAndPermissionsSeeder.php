@@ -133,7 +133,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'research-publications.view-own','research-publications.create','research-publications.edit-own','research-publications.delete-own','research-publications.submit','research-publications.download-own',
             'research-publications.view','research-publications.review','research-publications.edit','research-publications.publish',
             'researcher-profile.manage-privacy','researchers.manage-visibility',
-            'subscriptions.view','subscriptions.review','subscriptions.approve','subscriptions.reject',
+            'subscriptions.view','subscriptions.edit','subscriptions.review','subscriptions.approve','subscriptions.reject',
         ];
 
         foreach ($permissions as $permission) {

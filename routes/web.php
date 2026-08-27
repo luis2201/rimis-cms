@@ -135,6 +135,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::patch('submissions/{type}/{id}/publish', [SubmissionReviewController::class, 'publish'])->middleware('can:submissions.publish')->name('submissions.publish');
     Route::patch('submissions/{type}/{id}/unpublish', [SubmissionReviewController::class, 'unpublish'])->middleware('can:submissions.publish')->name('submissions.unpublish');
     Route::get('subscriptions',[AdminSubscriptionController::class,'index'])->middleware('can:subscriptions.view')->name('subscriptions.index');
+    Route::get('subscriptions/{subscription}/edit',[AdminSubscriptionController::class,'edit'])->middleware('can:subscriptions.edit')->name('subscriptions.edit');
+    Route::put('subscriptions/{subscription}',[AdminSubscriptionController::class,'update'])->middleware('can:subscriptions.edit')->name('subscriptions.update');
     Route::get('subscriptions/{subscription}',[AdminSubscriptionController::class,'show'])->middleware('can:subscriptions.view')->name('subscriptions.show');
     Route::patch('subscriptions/{subscription}/review',[AdminSubscriptionController::class,'startReview'])->middleware('can:subscriptions.review')->name('subscriptions.review');
     Route::patch('subscriptions/{subscription}/approve',[AdminSubscriptionController::class,'approve'])->middleware('can:subscriptions.approve')->name('subscriptions.approve');

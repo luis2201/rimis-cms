@@ -1,5 +1,5 @@
 <x-app-layout>
-<x-slot name="header"><h1>Suscripción {{ \App\Models\Subscription::TYPE_LABELS[$subscription->type] }}</h1></x-slot>
+<x-slot name="header"><div class="d-flex justify-content-between align-items-center"><h1>Suscripción {{ \App\Models\Subscription::TYPE_LABELS[$subscription->type] }}</h1>@can('subscriptions.edit')<a href="{{ route('admin.subscriptions.edit',$subscription) }}" class="btn btn-primary"><i class="fas fa-edit mr-1"></i> Editar datos</a>@endcan</div></x-slot>
 <div class="row"><div class="col-lg-8"><div class="card card-primary card-outline"><div class="card-body">
 <div class="d-flex align-items-center mb-4">@if($subscription->personal_photo_path || $subscription->institution_logo_path)<img src="{{ Storage::disk('public')->url($subscription->personal_photo_path ?: $subscription->institution_logo_path) }}" alt="{{ $subscription->displayName() }}" class="img-circle elevation-2 mr-3" style="width:90px;height:90px;object-fit:cover">@endif<div><h3 class="mb-1">{{ $subscription->displayName() }}</h3><span class="badge badge-info">{{ \App\Models\Subscription::TYPE_LABELS[$subscription->type] }}</span></div></div>
 @if($subscription->isProfessional())
