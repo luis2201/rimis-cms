@@ -67,6 +67,15 @@
         if ($action) {
             $breadcrumbs[] = ['label' => $action, 'url' => null];
         }
+    } elseif (request()->routeIs('admin.roles.*')) {
+        $breadcrumbs[] = [
+            'label' => 'Roles y permisos',
+            'url' => request()->routeIs('admin.roles.index') ? null : route('admin.roles.index'),
+        ];
+
+        if (request()->routeIs('admin.roles.edit')) {
+            $breadcrumbs[] = ['label' => 'Asignar permisos', 'url' => null];
+        }
     } elseif (request()->routeIs('admin.users.*')) {
         $breadcrumbs[] = [
             'label' => 'Usuarios',

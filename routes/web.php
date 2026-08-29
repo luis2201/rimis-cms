@@ -25,6 +25,7 @@ use App\Http\Controllers\PublicResearchPublicationController;
 use App\Http\Controllers\Admin\ResearchPublicationController as AdminResearchPublicationController;
 use App\Http\Controllers\PublicResearcherController;
 use App\Http\Controllers\Admin\ResearcherDirectoryController;
+use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HealthController;
@@ -236,6 +237,16 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::patch('users/{user}/activate', [UserController::class, 'activate'])
         ->middleware('can:users.edit')
         ->name('users.activate');
+
+    Route::get('roles', [RoleController::class, 'index'])
+        ->middleware('can:roles.view')
+        ->name('roles.index');
+    Route::get('roles/{role}/edit', [RoleController::class, 'edit'])
+        ->middleware('can:roles.edit')
+        ->name('roles.edit');
+    Route::put('roles/{role}', [RoleController::class, 'update'])
+        ->middleware('can:roles.edit')
+        ->name('roles.update');
 
     Route::get('media-files', [MediaFileController::class, 'index'])
         ->middleware('can:media.view')

@@ -113,10 +113,10 @@
                     </li>
                 @endcan
 
-                @can('users.view')
+                @canany(['users.view','roles.view'])
                     <li class="nav-header">ADMINISTRACIÓN</li>
-                    <li class="nav-item {{ request()->routeIs('admin.users.*') ? 'menu-open' : '' }}">
-                        <a href="#" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" role="button">
+                    <li class="nav-item {{ request()->routeIs('admin.users.*','admin.roles.*') ? 'menu-open' : '' }}">
+                        <a href="#" class="nav-link {{ request()->routeIs('admin.users.*','admin.roles.*') ? 'active' : '' }}" role="button">
                             <i class="nav-icon fas fa-users-cog"></i>
                             <p>
                                 Accesos
@@ -124,15 +124,25 @@
                             </p>
                         </a>
                         <ul class="nav nav-treeview">
+                            @can('users.view')
                             <li class="nav-item">
                                 <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
                                     <i class="fas fa-users nav-icon"></i>
                                     <p>Usuarios</p>
                                 </a>
                             </li>
+                            @endcan
+                            @can('roles.view')
+                            <li class="nav-item">
+                                <a href="{{ route('admin.roles.index') }}" class="nav-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
+                                    <i class="fas fa-user-shield nav-icon"></i>
+                                    <p>Roles y permisos</p>
+                                </a>
+                            </li>
+                            @endcan
                         </ul>
                     </li>
-                @endcan
+                @endcanany
 
                 @can('subscriptions.view')
                     <li class="nav-header">MEMBRESÍAS</li>

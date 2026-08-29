@@ -167,6 +167,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
         $admin->syncPermissions(Permission::all());
 
+        if (! $webmaster->permissions()->exists()) {
         $webmaster->syncPermissions([
             'dashboard.view',
 
@@ -252,7 +253,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'researchers.manage-visibility',
             'subscriptions.view','subscriptions.review','subscriptions.approve','subscriptions.reject',
         ]);
+        }
 
+        if (! $researcher->permissions()->exists()) {
         $researcher->syncPermissions([
             'dashboard.researcher',
 
@@ -276,9 +279,13 @@ class RolesAndPermissionsSeeder extends Seeder
             'research-publications.view-own','research-publications.create','research-publications.edit-own','research-publications.delete-own','research-publications.submit','research-publications.download-own',
             'researcher-profile.manage-privacy',
         ]);
+        }
 
-        $institutional->syncPermissions($researcher->permissions);
+        if (! $institutional->permissions()->exists()) {
+            $institutional->syncPermissions($researcher->permissions);
+        }
 
+        if (! $user->permissions()->exists()) {
         $user->syncPermissions([
             'dashboard.basic',
             'profile.view',
@@ -289,6 +296,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'applications.submit',
             'applications.withdraw',
         ]);
+        }
 
         $firstUser = User::first();
 
